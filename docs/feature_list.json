@@ -661,7 +661,7 @@
       "test:unit -- --grep 'Butler poisoned'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-DRUNK",

@@ -19,6 +19,7 @@ export function createInitialGameState(id: string, joinCode: string, storyteller
     nightQueuePosition: 0,
     executedPlayerId: null,
     monkProtectedPlayerId: null,
+    butlerMasterId: null,
     fortuneTellerRedHerringId: null,
     demonBluffRoles: [],
     slayerAbilityUsed: false,
@@ -881,6 +882,24 @@ export function processMonkAction(state: GameState, targetPlayerId: string): Gam
       {
         timestamp: Date.now(),
         type: 'monk_action',
+        data: { targetPlayerId },
+      },
+    ],
+  };
+}
+
+export function processButlerAction(state: GameState, targetPlayerId: string): GameState {
+  const target = state.players.find((p) => p.id === targetPlayerId);
+  if (!target) return state;
+
+  return {
+    ...state,
+    butlerMasterId: targetPlayerId,
+    gameLog: [
+      ...state.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'butler_action',
         data: { targetPlayerId },
       },
     ],

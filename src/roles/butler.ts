@@ -11,6 +11,34 @@ export const metadata: RoleMetadata = {
   otherNights: true,
 };
 
-export const abilityHandler: AbilityHandler = (_context, _input) => {
-  return { success: true };
+export const abilityHandler: AbilityHandler = (context, input) => {
+  const { gameState, player } = context;
+  const { targetPlayerId } = input as { targetPlayerId?: string };
+
+  if (!targetPlayerId) {
+    return { success: false, message: 'Must choose a player as master' };
+  }
+
+  const target = gameState.players.find((p) => p.id === targetPlayerId);
+  if (!target) {
+    return { success: false, message: 'Target player not found' };
+  }
+
+  if (!target.isAlive) {
+    return { success: false, message: 'Target player is dead' };
+  }
+
+  if (target.id === player.id) {
+    return { success: false, message: 'Cannot choose yourself as master' };
+  }
+
+  const isCorrupted = context.isPoisoned || context.isDrunk;
+
+  return {
+    success: true,
+    data: { targetPlayerId, isCorrupted },
+    stateMutation: {
+      butlerMasterId: targetPlayerId,
+    },
+  };
 };

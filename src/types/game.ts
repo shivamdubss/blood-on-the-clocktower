@@ -110,6 +110,7 @@ export interface GameState {
   nightQueuePosition: number;
   executedPlayerId: string | null;
   monkProtectedPlayerId: string | null;
+  butlerMasterId: string | null;
   fortuneTellerRedHerringId: string | null;
   demonBluffRoles: RoleId[];
   slayerAbilityUsed: boolean;

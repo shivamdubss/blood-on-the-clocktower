@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction, processVirginNomination, processSlayerAction } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processButlerAction, processImpAction, processVirginNomination, processSlayerAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -23,6 +23,7 @@ function sanitizeGameStateForPlayer(state: GameState): GameState {
     ...state,
     hostSecret: '',
     demonBluffRoles: [],
+    butlerMasterId: null,
     players: state.players.map((p) => ({
       ...p,
       trueRole: 'washerwoman' as const,
@@ -484,6 +485,22 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         return;
       }
 
+      // Butler vote constraint: Butler can only vote yes if their master has voted yes
+      if (data.vote && game.butlerMasterId) {
+        const butlerPlayer = game.players.find((p) => p.id === socket.id);
+        if (butlerPlayer && butlerPlayer.isAlive) {
+          const isButler = butlerPlayer.trueRole === 'butler' || (butlerPlayer.trueRole === 'drunk' && butlerPlayer.apparentRole === 'butler');
+          if (isButler && !butlerPlayer.isPoisoned && !butlerPlayer.isDrunk) {
+            const master = game.players.find((p) => p.id === game.butlerMasterId);
+            // Constraint lifted if master is dead; otherwise master must have voted yes
+            if (master && master.isAlive && !nomination.votes.includes(game.butlerMasterId)) {
+              socket.emit('vote_error', { message: 'You may only vote when your master is voting' });
+              return;
+            }
+          }
+        }
+      }
+
       const updatedGame = recordVote(game, activeNominationIndex, socket.id, data.vote);
       store.games.set(game.id, updatedGame);
 
@@ -789,6 +806,13 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
           if (monkPlayer && !monkPlayer.isPoisoned) {
             processedGame = processMonkAction(processedGame, input.targetPlayerId);
           }
+        }
+      }
+
+      if (currentEntry.roleId === 'butler') {
+        const input = data.input as { targetPlayerId?: string } | undefined;
+        if (input?.targetPlayerId) {
+          processedGame = processButlerAction(processedGame, input.targetPlayerId);
         }
       }
 
