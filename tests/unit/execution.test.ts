@@ -546,12 +546,16 @@ describe('execution', () => {
     it('Demon execution triggers game_over event with Good win', async () => {
       const { host, players, gameId } = await setupGameInNomination(7);
 
-      // Set one player as the Imp
+      // Set one player as the Imp, and ensure no Scarlet Woman exists (to avoid SW trigger)
       const game = store.games.get(gameId)!;
       store.games.set(gameId, {
         ...game,
         players: game.players.map((p) =>
-          p.id === players[1].id! ? { ...p, trueRole: 'imp' as const } : p
+          p.id === players[1].id!
+            ? { ...p, trueRole: 'imp' as const }
+            : p.trueRole === 'scarletWoman'
+              ? { ...p, trueRole: 'washerwoman' as const }
+              : p
         ),
       });
 
