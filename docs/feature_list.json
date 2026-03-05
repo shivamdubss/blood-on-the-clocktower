@@ -261,7 +261,7 @@
       "test:e2e -- --grep 'day to night'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ARCH-01",

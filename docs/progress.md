@@ -1,12 +1,21 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
-- **Features Completed:** 16 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05)
-- **Last Known Working State:** All tests passing (155 unit, 16 e2e)
-- **Last Session:** Session 15
+- **Current Milestone:** Milestone 3 (Day Phase) -- COMPLETE
+- **Features Completed:** 17 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06)
+- **Last Known Working State:** All tests passing (165 unit, 16 e2e)
+- **Last Session:** Session 16
 
 ## Session Log
+
+### Session 16 -- DAY-06
+- Implemented DAY-06: Storyteller can end the day and transition to night phase
+- Added `transitionToNight()` to `gameStateMachine.ts`: transitions phase to night, clears daySubPhase, nominations, activeNominationIndex, executedPlayerId
+- Added `end_day` socket handler: Storyteller-only, validates phase is day and daySubPhase is 'end' or 'execution' (nominations must be closed)
+- Broadcasts `night_started` event with dayNumber and sanitized `game_state` to all clients
+- 10 new unit tests in `endDay.test.ts`: 3 state machine tests + 7 WebSocket integration tests
+- All 165 unit + 16 e2e tests passing
+- MILESTONE 3 COMPLETE
 
 ### Session 15 -- DAY-05
 - Implemented DAY-05: Execution resolution -- highest passing vote count triggers execution

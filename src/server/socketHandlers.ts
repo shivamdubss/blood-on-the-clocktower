@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -570,6 +570,37 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       } else {
         io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
       }
+    });
+
+    socket.on('end_day', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('end_day_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('end_day_error', { message: 'Only the Storyteller can end the day' });
+        return;
+      }
+
+      if (game.phase !== 'day') {
+        socket.emit('end_day_error', { message: 'Can only end the day during the day phase' });
+        return;
+      }
+
+      // End Day is only available after nominations are closed (daySubPhase === 'end' or 'execution')
+      if (game.daySubPhase !== 'end' && game.daySubPhase !== 'execution') {
+        socket.emit('end_day_error', { message: 'Must close nominations before ending the day' });
+        return;
+      }
+
+      const updatedGame = transitionToNight(game);
+      store.games.set(game.id, updatedGame);
+
+      io.to(game.id).emit('night_started', { dayNumber: game.dayNumber });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 
     socket.on('disconnect', () => {

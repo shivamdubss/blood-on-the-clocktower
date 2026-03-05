@@ -376,6 +376,21 @@ export function resolveExecution(state: GameState): GameState {
   return newState;
 }
 
+export function transitionToNight(state: GameState): GameState {
+  return {
+    ...state,
+    phase: 'night' as Phase,
+    daySubPhase: null,
+    nominations: [],
+    activeNominationIndex: null,
+    executedPlayerId: null,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'phase_transition', data: { phase: 'night' } },
+    ],
+  };
+}
+
 export function applyStorytellOverride(
   state: GameState,
   override: Partial<GameState>
