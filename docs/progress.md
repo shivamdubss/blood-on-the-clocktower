@@ -2,13 +2,13 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 38 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER)
-- **Last Known Working State:** All tests passing (556 unit, 16 e2e)
+- **Features Completed:** 39 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER)
+- **Last Known Working State:** All tests passing (563 unit, 16 e2e)
 - **Last Session:** Session 36
 
 ## Session Log
 
-### Session 36 -- ABILITY-SLAYER
+### Session 36 -- ABILITY-SLAYER + ABILITY-SOLDIER
 - Marked ABILITY-SLAYER as passing: implementation was already complete from prior sessions (processSlayerAction in gameStateMachine.ts, slayer_action socket handler in socketHandlers.ts)
 - Fixed flaky WebSocket test: "Slayer kills the Demon and all clients receive slayer_result" was timing out because random role assignment could include Scarlet Woman, preventing game_over; fix ensures SW is replaced with poisoner in the test setup
 - Slayer is a one-time active day ability: player publicly chooses a target, if target is the Demon they die immediately
@@ -16,7 +16,12 @@
 - Socket handler validates: day phase, player is alive, player is Slayer (trueRole or apparentRole), ability not already used, target exists and alive
 - 15 tests in slayer.test.ts: 9 state machine tests (hit, miss, spent, poisoned, drunk, SW trigger, Good win, logging, purity) + 6 WebSocket tests (kill Demon, miss, poisoned, second use error, non-Slayer error, night phase error)
 - All 556 unit + 16 e2e tests passing
-- Next feature: ABILITY-SOLDIER
+- Marked ABILITY-SOLDIER as passing: Soldier protection already implemented in processImpAction (gameStateMachine.ts lines 970-983)
+- Soldier is a purely passive role (firstNight: false, otherNights: false) — no night action needed
+- Protection blocks Demon kill; poisoned Soldier loses protection; execution still kills Soldier
+- 7 new tests in soldier.test.ts: 5 state machine tests (protection, poisoned, execution, passive metadata, purity) + 2 WebSocket tests (Imp blocked by Soldier in night queue, poisoned Soldier killed)
+- All 563 unit + 16 e2e tests passing
+- Next feature: ABILITY-MAYOR (last in Milestone 6)
 
 ### Session 35 -- ABILITY-RAVENKEEPER
 - Implemented ABILITY-RAVENKEEPER: Ravenkeeper chooses a player and learns their role when killed by the Demon at night
