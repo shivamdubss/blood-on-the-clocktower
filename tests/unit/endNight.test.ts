@@ -256,8 +256,8 @@ describe('end night', () => {
       store.games.set(gameId, state);
 
       const storyteller = createClient();
-      const player = createClient();
       await new Promise<void>((resolve) => storyteller.on('connect', resolve));
+      const player = createClient();
       await new Promise<void>((resolve) => player.on('connect', resolve));
 
       storyteller.emit('join_game', { joinCode: 'ABC123', playerName: 'ST' });

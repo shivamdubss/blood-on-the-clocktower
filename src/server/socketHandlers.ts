@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -637,7 +637,22 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         return;
       }
 
-      const updatedGame = advanceNightQueue(game, data.input);
+      // Process role-specific effects before advancing the queue
+      const currentEntry = game.nightQueue[game.nightQueuePosition];
+      let processedGame = game;
+
+      if (currentEntry.roleId === 'poisoner') {
+        const input = data.input as { targetPlayerId?: string } | undefined;
+        if (input?.targetPlayerId) {
+          // Only apply poison if the Poisoner is not themselves poisoned
+          const poisoner = processedGame.players.find((p) => p.id === currentEntry.playerId);
+          if (poisoner && !poisoner.isPoisoned) {
+            processedGame = processPoisonerAction(processedGame, input.targetPlayerId);
+          }
+        }
+      }
+
+      const updatedGame = advanceNightQueue(processedGame, data.input);
       store.games.set(game.id, updatedGame);
 
       // Send confirmation of the completed action
@@ -646,6 +661,25 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         queuePosition: game.nightQueuePosition,
         roleId: completedEntry.roleId,
         playerId: completedEntry.playerId,
+      });
+
+      // Send updated Grimoire to Storyteller (reflects poison status changes etc.)
+      const grimoire = updatedGame.players.map((p) => {
+        const trueMeta = ROLE_MAP.get(p.trueRole);
+        const apparentMeta = ROLE_MAP.get(p.apparentRole);
+        return {
+          playerId: p.id,
+          playerName: p.name,
+          trueRole: trueMeta ? { id: trueMeta.id, name: trueMeta.name, team: trueMeta.team, ability: trueMeta.ability } : null,
+          apparentRole: apparentMeta ? { id: apparentMeta.id, name: apparentMeta.name, team: apparentMeta.team, ability: apparentMeta.ability } : null,
+          isAlive: p.isAlive,
+          isPoisoned: p.isPoisoned,
+          isDrunk: p.isDrunk,
+        };
+      });
+      socket.emit('grimoire', {
+        players: grimoire,
+        fortuneTellerRedHerringId: updatedGame.fortuneTellerRedHerringId,
       });
 
       // Send the next prompt or signal queue completion

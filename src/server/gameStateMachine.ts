@@ -708,6 +708,27 @@ export function commitNightActions(state: GameState): GameState {
   };
 }
 
+export function processPoisonerAction(state: GameState, targetPlayerId: string): GameState {
+  const target = state.players.find((p) => p.id === targetPlayerId);
+  if (!target) return state;
+
+  // Clear all previous poison, then poison the new target
+  let newState = clearPoison(state);
+  newState = poisonPlayer(newState, targetPlayerId);
+
+  return {
+    ...newState,
+    gameLog: [
+      ...newState.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'poisoner_action',
+        data: { targetPlayerId },
+      },
+    ],
+  };
+}
+
 export async function resolveAbility(
   state: GameState,
   playerId: string,
