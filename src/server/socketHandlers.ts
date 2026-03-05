@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction, processVirginNomination } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction, processVirginNomination, processSlayerAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -611,6 +611,81 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       }
     });
 
+    socket.on('slayer_action', (data: { gameId: string; targetPlayerId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('slayer_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.phase !== 'day') {
+        socket.emit('slayer_error', { message: 'Slayer ability can only be used during the day' });
+        return;
+      }
+
+      const slayer = game.players.find((p) => p.id === socket.id);
+      if (!slayer) {
+        socket.emit('slayer_error', { message: 'You are not in this game' });
+        return;
+      }
+
+      if (!slayer.isAlive) {
+        socket.emit('slayer_error', { message: 'Dead players cannot use abilities' });
+        return;
+      }
+
+      // Check the Slayer's apparent role (Slayer or Drunk-as-Slayer)
+      if (slayer.trueRole !== 'slayer' && slayer.apparentRole !== 'slayer') {
+        socket.emit('slayer_error', { message: 'You are not the Slayer' });
+        return;
+      }
+
+      if (game.slayerAbilityUsed) {
+        socket.emit('slayer_error', { message: 'Slayer ability has already been used' });
+        return;
+      }
+
+      const target = game.players.find((p) => p.id === data.targetPlayerId);
+      if (!target) {
+        socket.emit('slayer_error', { message: 'Target player not found' });
+        return;
+      }
+
+      if (!target.isAlive) {
+        socket.emit('slayer_error', { message: 'Cannot target a dead player' });
+        return;
+      }
+
+      const result = processSlayerAction(game, socket.id, data.targetPlayerId);
+      store.games.set(game.id, result.state);
+
+      const targetPlayer = result.state.players.find((p) => p.id === data.targetPlayerId)!;
+
+      io.to(game.id).emit('slayer_result', {
+        slayerId: socket.id,
+        slayerName: slayer.name,
+        targetId: data.targetPlayerId,
+        targetName: target.name,
+        targetDied: result.targetDied,
+      });
+
+      if (result.state.phase === 'ended') {
+        io.to(game.id).emit('game_over', {
+          winner: result.state.winner,
+          players: result.state.players.map((p) => ({
+            playerId: p.id,
+            playerName: p.name,
+            trueRole: p.trueRole,
+            isAlive: p.isAlive,
+          })),
+        });
+        io.to(game.id).emit('game_state', result.state);
+      } else {
+        io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(result.state));
+      }
+    });
+
     socket.on('end_day', (data: { gameId: string }) => {
       const game = store.games.get(data.gameId);
 
@@ -718,12 +793,12 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       }
 
       if (currentEntry.roleId === 'imp') {
-        const input = data.input as { targetPlayerId?: string; starPassMinionId?: string } | undefined;
+        const input = data.input as { targetPlayerId?: string; starPassMinionId?: string; mayorRedirectPlayerId?: string } | undefined;
         if (input?.targetPlayerId) {
           // Only apply kill if the Imp is not poisoned
           const impPlayer = processedGame.players.find((p) => p.id === currentEntry.playerId);
           if (impPlayer && !impPlayer.isPoisoned) {
-            processedGame = processImpAction(processedGame, input.targetPlayerId, currentEntry.playerId, input.starPassMinionId);
+            processedGame = processImpAction(processedGame, input.targetPlayerId, currentEntry.playerId, input.starPassMinionId, input.mayorRedirectPlayerId);
           }
         }
       }

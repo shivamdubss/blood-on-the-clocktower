@@ -912,7 +912,8 @@ export function processImpAction(
   state: GameState,
   targetPlayerId: string,
   impPlayerId: string,
-  starPassMinionId?: string
+  starPassMinionId?: string,
+  mayorRedirectPlayerId?: string
 ): GameState {
   const target = state.players.find((p) => p.id === targetPlayerId);
   if (!target || !target.isAlive) return state;
@@ -950,6 +951,25 @@ export function processImpAction(
         },
       ],
     };
+  }
+
+  // Check Mayor bounce: if target is Mayor (not poisoned), Storyteller may redirect the kill
+  if (target.trueRole === 'mayor' && !target.isPoisoned && mayorRedirectPlayerId) {
+    const redirectTarget = state.players.find((p) => p.id === mayorRedirectPlayerId && p.isAlive);
+    if (redirectTarget) {
+      const newState = addPendingDeath(state, mayorRedirectPlayerId);
+      return {
+        ...newState,
+        gameLog: [
+          ...newState.gameLog,
+          {
+            timestamp: Date.now(),
+            type: 'mayor_bounce',
+            data: { mayorPlayerId: targetPlayerId, redirectTargetId: mayorRedirectPlayerId },
+          },
+        ],
+      };
+    }
   }
 
   // Check Monk protection
@@ -995,6 +1015,70 @@ export function processImpAction(
       },
     ],
   };
+}
+
+export interface SlayerActionResult {
+  state: GameState;
+  targetDied: boolean;
+}
+
+export function processSlayerAction(state: GameState, slayerPlayerId: string, targetPlayerId: string): SlayerActionResult {
+  const slayer = state.players.find((p) => p.id === slayerPlayerId);
+  const target = state.players.find((p) => p.id === targetPlayerId);
+
+  if (!slayer || !target) {
+    return { state, targetDied: false };
+  }
+
+  // Ability can only be used once
+  if (state.slayerAbilityUsed) {
+    return { state, targetDied: false };
+  }
+
+  // Mark ability as used regardless of outcome
+  let newState: GameState = {
+    ...state,
+    slayerAbilityUsed: true,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'slayer_action', data: { slayerPlayerId, targetPlayerId } },
+    ],
+  };
+
+  // If Slayer is poisoned or drunk, ability has no effect
+  if (slayer.isPoisoned || slayer.isDrunk) {
+    return { state: newState, targetDied: false };
+  }
+
+  // If target is the Demon, they die immediately
+  if (target.trueRole === 'imp') {
+    newState = killPlayer(newState, targetPlayerId);
+
+    // Check for Scarlet Woman trigger
+    const aliveBeforeDeath = state.players.filter((p) => p.isAlive).length;
+    const scarletWoman = state.players.find(
+      (p) => p.trueRole === 'scarletWoman' && p.isAlive && !p.isPoisoned
+    );
+    if (scarletWoman && aliveBeforeDeath >= 5) {
+      newState = {
+        ...newState,
+        players: newState.players.map((p) =>
+          p.id === scarletWoman.id ? { ...p, trueRole: 'imp' as const } : p
+        ),
+        gameLog: [
+          ...newState.gameLog,
+          { timestamp: Date.now(), type: 'scarlet_woman_trigger', data: { playerId: scarletWoman.id } },
+        ],
+      };
+    } else {
+      newState = { ...newState, winner: 'good', phase: 'ended' };
+    }
+
+    return { state: newState, targetDied: true };
+  }
+
+  // Target is not the Demon — nothing happens
+  return { state: newState, targetDied: false };
 }
 
 export async function resolveAbility(
