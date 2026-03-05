@@ -85,9 +85,14 @@ export interface NightPromptInfo {
   playerName: string;
   isDrunk: boolean;
   isPoisoned: boolean;
-  promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'info_only';
+  promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'provide_role' | 'info_only';
   promptDescription: string;
   grimoireData?: GrimoireData;
+  executedPlayerInfo?: {
+    playerId: string;
+    playerName: string;
+    trueRole: string;
+  };
 }
 
 export interface GameState {

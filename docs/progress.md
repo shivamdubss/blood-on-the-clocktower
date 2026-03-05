@@ -2,11 +2,24 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 34 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER)
-- **Last Known Working State:** All tests passing (468 unit, 16 e2e)
-- **Last Session:** Session 32
+- **Features Completed:** 35 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER)
+- **Last Known Working State:** All tests passing (487 unit, 16 e2e)
+- **Last Session:** Session 33
 
 ## Session Log
+
+### Session 33 -- ABILITY-UNDERTAKER
+- Implemented ABILITY-UNDERTAKER: Undertaker learns the role of the executed player each night (after first)
+- Updated `src/roles/undertaker.ts` ability handler: validates `role` string input from Storyteller or `noExecution: true`, checks isPoisoned/isDrunk for isCorrupted flag
+- Added `provide_role` prompt type to `NightPromptInfo` for Undertaker-specific Storyteller input
+- Added `executedPlayerInfo` optional field to `NightPromptInfo`: includes playerId, playerName, trueRole from game log execution entry (convenience for Storyteller)
+- Infrastructure already in place: undertaker in NIGHT_OTHER_ORDER (not NIGHT_1_ORDER), included in INFO_ROLES
+- Fires every night except Night 1
+- When no execution occurred, Storyteller submits `{ noExecution: true }` and Undertaker learns nothing
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false role
+- 19 new tests in `undertaker.test.ts`: 2 night order tests (not Night 1, Night 2+), 3 night prompt tests (prompt type, executed player info, no execution info), 9 ability handler tests (role info, noExecution, validation, poisoned, drunk), 5 WebSocket tests (role delivery, noExecution delivery, poisoned delivery, isPoisoned flag, isDrunk flag)
+- All 487 unit + 16 e2e tests passing
+- Next feature: ABILITY-MONK
 
 ### Session 32 -- ABILITY-FORTUNE-TELLER
 - Implemented ABILITY-FORTUNE-TELLER: Fortune Teller chooses 2 players each night, learns if either is the Demon (or red herring)

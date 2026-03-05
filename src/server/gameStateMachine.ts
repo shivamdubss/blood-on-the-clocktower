@@ -614,6 +614,23 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
     prompt.grimoireData = buildGrimoireData(state);
   }
 
+  // Include execution info for the Undertaker's night prompt
+  if (entry.roleId === 'undertaker') {
+    const executionLog = [...state.gameLog].reverse().find((log) => log.type === 'execution' || log.type === 'no_execution' || log.type === 'execution_tie');
+    if (executionLog && executionLog.type === 'execution') {
+      const execData = executionLog.data as { playerId: string };
+      const executedPlayer = state.players.find((p) => p.id === execData.playerId);
+      if (executedPlayer) {
+        const executedRoleMeta = ROLE_MAP.get(executedPlayer.trueRole);
+        prompt.executedPlayerInfo = {
+          playerId: executedPlayer.id,
+          playerName: executedPlayer.name,
+          trueRole: executedRoleMeta?.id || executedPlayer.trueRole,
+        };
+      }
+    }
+  }
+
   return prompt;
 }
 
@@ -633,9 +650,10 @@ function getRolePromptType(roleId: RoleId): NightPromptInfo['promptType'] {
     case 'librarian':
     case 'investigator':
       return 'choose_players_and_role';
+    case 'undertaker':
+      return 'provide_role';
     case 'spy':
     case 'ravenkeeper':
-    case 'undertaker':
     default:
       return 'info_only';
   }
