@@ -609,6 +609,21 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
     promptDescription,
   };
 
+  // Include Ravenkeeper killed-tonight status and change prompt type
+  if (entry.roleId === 'ravenkeeper') {
+    const killedByDemon = state.pendingDeaths.includes(player.id);
+    prompt.ravenkeeperKilledTonight = killedByDemon;
+    if (killedByDemon) {
+      prompt.promptType = 'choose_player_and_provide_role';
+      prompt.promptDescription = `${player.name} (Ravenkeeper) was killed by the Demon tonight! They choose a player to learn their role.`;
+      if (player.isDrunk) {
+        prompt.promptDescription += ` ⚠ THIS PLAYER IS THE DRUNK — provide false information.`;
+      }
+    } else {
+      prompt.promptDescription = `${player.name} (Ravenkeeper) was NOT killed tonight. No action needed — skip.`;
+    }
+  }
+
   // Include grimoire data for the Spy's night prompt
   if (entry.roleId === 'spy') {
     prompt.grimoireData = buildGrimoireData(state);

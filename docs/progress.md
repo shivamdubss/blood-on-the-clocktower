@@ -2,11 +2,25 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 36 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK)
-- **Last Known Working State:** All tests passing (508 unit, 16 e2e)
-- **Last Session:** Session 34
+- **Features Completed:** 37 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER)
+- **Last Known Working State:** All tests passing (525 unit, 16 e2e)
+- **Last Session:** Session 35
 
 ## Session Log
+
+### Session 35 -- ABILITY-RAVENKEEPER
+- Implemented ABILITY-RAVENKEEPER: Ravenkeeper chooses a player and learns their role when killed by the Demon at night
+- Updated `src/roles/ravenkeeper.ts` ability handler: validates targetPlayerId and role input, checks isPoisoned/isDrunk for isCorrupted flag, supports `notTriggered` flag when not killed
+- Added `choose_player_and_provide_role` prompt type to `NightPromptInfo` for Ravenkeeper-specific Storyteller input
+- Added `ravenkeeperKilledTonight` optional field to `NightPromptInfo`: checks if Ravenkeeper is in pendingDeaths
+- Updated `getNightPromptInfo()` in `gameStateMachine.ts`: dynamically changes prompt type and description based on whether Ravenkeeper was killed
+- Updated `socketHandlers.ts` night_info delivery: resolves `targetPlayerId` → `targetPlayerName`, suppresses night_info when `notTriggered` is set
+- Infrastructure already in place: ravenkeeper in NIGHT_OTHER_ORDER (after imp), included in INFO_ROLES
+- Fires every night except Night 1; only triggers when killed by Demon (in pendingDeaths)
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false role
+- 17 new tests in `ravenkeeper.test.ts`: 3 night order tests, 2 night prompt tests (killed/not killed), 8 ability handler tests (triggered, notTriggered, validation, poisoned, drunk, execution no-trigger), 4 WebSocket tests (night_info delivery, no delivery when not killed, poisoned delivery, Imp+RK queue sequence)
+- All 525 unit + 16 e2e tests passing
+- Next feature: ABILITY-VIRGIN
 
 ### Session 34 -- ABILITY-MONK
 - Implemented ABILITY-MONK: Monk chooses a player each night (not first) to protect from the Demon

@@ -85,7 +85,7 @@ export interface NightPromptInfo {
   playerName: string;
   isDrunk: boolean;
   isPoisoned: boolean;
-  promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'provide_role' | 'info_only';
+  promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'provide_role' | 'choose_player_and_provide_role' | 'info_only';
   promptDescription: string;
   grimoireData?: GrimoireData;
   executedPlayerInfo?: {
@@ -93,6 +93,7 @@ export interface NightPromptInfo {
     playerName: string;
     trueRole: string;
   };
+  ravenkeeperKilledTonight?: boolean;
 }
 
 export interface GameState {

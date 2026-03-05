@@ -707,7 +707,16 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
           const p2 = updatedGame.players.find((p) => p.id === infoInput.player2Id);
           if (p2) nightInfo.player2Name = p2.name;
         }
-        io.to(currentEntry.playerId).emit('night_info', nightInfo);
+        if (infoInput.targetPlayerId) {
+          const tp = updatedGame.players.find((p) => p.id === infoInput.targetPlayerId);
+          if (tp) nightInfo.targetPlayerName = tp.name;
+        }
+        // Don't send night_info for Ravenkeeper if not triggered
+        if (currentEntry.roleId === 'ravenkeeper' && infoInput.notTriggered) {
+          // No info to send when Ravenkeeper was not killed
+        } else {
+          io.to(currentEntry.playerId).emit('night_info', nightInfo);
+        }
       }
 
       // Send confirmation of the completed action
