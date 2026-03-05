@@ -1,0 +1,965 @@
+[
+  {
+    "id": "LOBBY-01",
+    "category": "lobby",
+    "description": "Host can create a game and receive a 6-character join code",
+    "acceptance_criteria": [
+      "POST /api/game returns a game ID and a unique 6-character alphanumeric join code",
+      "Join code is unique across all active games",
+      "Game appears in server-side active games map",
+      "Response includes WebSocket connection URL for the host"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'game creation'",
+      "test:e2e -- --grep 'create game'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "LOBBY-02",
+    "category": "lobby",
+    "description": "Players can join a game using the join code and choose a display name",
+    "acceptance_criteria": [
+      "Player enters join code and display name, receives confirmation and WebSocket connection",
+      "Host sees new player appear in real time via WebSocket",
+      "Duplicate display names within the same game are rejected with an error message",
+      "Invalid join codes return an appropriate error",
+      "Players cannot join a game that has already started"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'join game'",
+      "test:e2e -- --grep 'join lobby'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "LOBBY-03",
+    "category": "lobby",
+    "description": "Host can configure and start the game from the lobby",
+    "acceptance_criteria": [
+      "Host sees all connected players listed in the lobby UI",
+      "Host can start the game only when player count is between 5 and 15",
+      "Starting the game transitions all connected clients to the game phase",
+      "Players who disconnect from the lobby are removed from the player list"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'start game'",
+      "test:e2e -- --grep 'lobby start'"
+    ],
+    "human_review": [
+      "Verify lobby UI layout is clear and intuitive"
+    ],
+    "passes": false
+  },
+  {
+    "id": "ROLE-01",
+    "category": "roles",
+    "description": "Server assigns roles according to the official Trouble Brewing distribution table",
+    "acceptance_criteria": [
+      "Role distribution matches the official table for every player count (5-15)",
+      "Each player receives exactly one role",
+      "All 14 Trouble Brewing roles are available in the role pool",
+      "Townsfolk, Outsider, Minion, and Demon counts match the table for the given player count",
+      "Random assignment does not repeat roles within a single game"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'role distribution'",
+      "test:unit -- --grep 'role assignment'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ROLE-02",
+    "category": "roles",
+    "description": "Players receive their private role card after assignment",
+    "acceptance_criteria": [
+      "Each player's client receives only their own role via WebSocket (not other players' roles)",
+      "Role card displays role name, team, and ability description",
+      "Storyteller's Grimoire shows all players' true roles"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'role card'",
+      "test:e2e -- --grep 'role reveal'"
+    ],
+    "human_review": [
+      "Verify role card UI is readable and correctly styled"
+    ],
+    "passes": false
+  },
+  {
+    "id": "SETUP-01",
+    "category": "setup",
+    "description": "Night 0 setup: Baron adjustment adds 2 Outsiders",
+    "acceptance_criteria": [
+      "When Baron is in the game, 2 Townsfolk slots are replaced by 2 Outsider slots",
+      "The adjusted distribution still totals the correct player count",
+      "Baron adjustment is applied before role assignment, not after"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Baron adjustment'",
+      "test:unit -- --grep 'Baron setup'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "SETUP-02",
+    "category": "setup",
+    "description": "Night 0 setup: Drunk is assigned an apparent Townsfolk role",
+    "acceptance_criteria": [
+      "Drunk's apparent role is a Townsfolk role not otherwise in the game",
+      "Drunk's client shows the apparent role (not 'Drunk')",
+      "Storyteller's Grimoire shows both the true role (Drunk) and the apparent role",
+      "Drunk's apparent role is stored in game state for use by the ability system"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Drunk assignment'",
+      "test:unit -- --grep 'Drunk apparent role'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "SETUP-03",
+    "category": "setup",
+    "description": "Night 0 setup: Fortune Teller red herring is assigned",
+    "acceptance_criteria": [
+      "One Good player is designated as the Fortune Teller's red herring at game start",
+      "Red herring assignment is stored in game state and visible in the Grimoire",
+      "Red herring does not change for the remainder of the game, even if the player dies"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'red herring'",
+      "test:unit -- --grep 'Fortune Teller setup'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "SETUP-04",
+    "category": "setup",
+    "description": "Night 0 setup: Minion and Demon info exchange",
+    "acceptance_criteria": [
+      "Minions learn each other's identity and the Demon's identity on Night 1",
+      "Demon learns the Minions' identities on Night 1",
+      "Demon learns 3 not-in-play Townsfolk roles (bluff roles) on Night 1",
+      "Info is delivered via WebSocket to the correct players only"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Minion info'",
+      "test:unit -- --grep 'Demon info'",
+      "test:unit -- --grep 'bluff roles'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-01",
+    "category": "day-phase",
+    "description": "Dawn announcement: deaths from the previous night are announced",
+    "acceptance_criteria": [
+      "Players who died during the night are announced by name (not role) at dawn",
+      "All connected clients receive the death announcement simultaneously",
+      "Dead players are marked as dead in the UI and cannot take day actions (except ghost vote)",
+      "If no deaths occurred, a 'no deaths' message is shown"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'dawn announcement'",
+      "test:e2e -- --grep 'dawn deaths'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-02",
+    "category": "day-phase",
+    "description": "Discussion phase with Storyteller-controlled timing",
+    "acceptance_criteria": [
+      "Discussion phase begins after dawn announcement",
+      "Storyteller can end the discussion phase manually at any time",
+      "Players see a visual indicator that discussion is ongoing",
+      "Transitioning out of discussion moves to the nomination window"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'discussion phase'",
+      "test:e2e -- --grep 'discussion'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-03",
+    "category": "day-phase",
+    "description": "Nomination system: living players can nominate other players",
+    "acceptance_criteria": [
+      "Any living player may nominate any other living player",
+      "A player may only nominate once per day",
+      "A player may only be nominated once per day",
+      "Storyteller can open and close the nomination window",
+      "Dead players cannot nominate"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'nomination'",
+      "test:e2e -- --grep 'nominate'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-04",
+    "category": "day-phase",
+    "description": "Voting system: simultaneous public voting on nominations",
+    "acceptance_criteria": [
+      "Each nomination triggers a vote immediately",
+      "Living players can vote by clicking a vote button",
+      "Votes are locked in simultaneously (all players submit before results are revealed)",
+      "Vote results are revealed to all players at once",
+      "A nomination passes if the vote count exceeds half of living players (rounded up)",
+      "Dead players have exactly one ghost vote for the entire game; once used, they cannot vote again",
+      "Ghost vote usage is tracked and enforced server-side"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'voting'",
+      "test:unit -- --grep 'ghost vote'",
+      "test:e2e -- --grep 'vote'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-05",
+    "category": "day-phase",
+    "description": "Execution resolution: highest passing vote count triggers execution",
+    "acceptance_criteria": [
+      "The player with the highest passing vote count is executed at end of day",
+      "If two nominations tie with the same passing count, no execution occurs",
+      "Executed player is marked as dead",
+      "Execution triggers win condition checks (Saint, Demon death)",
+      "If no nominations pass, no execution occurs"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'execution'",
+      "test:e2e -- --grep 'execute'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "DAY-06",
+    "category": "day-phase",
+    "description": "Storyteller can end the day and transition to night",
+    "acceptance_criteria": [
+      "Storyteller has an 'End Day' button that transitions to night phase",
+      "End Day is only available after the nomination window is closed",
+      "All clients transition to night phase view simultaneously"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'end day'",
+      "test:e2e -- --grep 'day to night'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ARCH-01",
+    "category": "architecture",
+    "description": "Ability execution context with isPoisoned and isDrunk flags",
+    "acceptance_criteria": [
+      "AbilityContext type includes isPoisoned and isDrunk boolean fields",
+      "All ability resolution functions receive AbilityContext as a parameter",
+      "A poisoned ability returns false/null/corrupted information instead of true information",
+      "A drunk ability behaves identically to a poisoned ability (corrupted output)",
+      "Context flags are set by the state machine based on active Poisoner target and Drunk status",
+      "The corruption flag is on the ability execution context, not on the role itself"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'ability context'",
+      "test:unit -- --grep 'poisoned ability'",
+      "test:unit -- --grep 'drunk ability'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "NIGHT-01",
+    "category": "night-phase",
+    "description": "Night order is defined as static data and queue is generated at runtime",
+    "acceptance_criteria": [
+      "Night order is defined in src/data/nightOrder.ts as static data arrays",
+      "Night 1 order and subsequent night order are separate arrays",
+      "Night queue is generated at runtime, filtered to roles present and alive in the current game",
+      "Night order matches the official Trouble Brewing order"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'night order'",
+      "test:unit -- --grep 'night queue'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "NIGHT-02",
+    "category": "night-phase",
+    "description": "Storyteller night dashboard: sequential prompts for each role in the queue",
+    "acceptance_criteria": [
+      "Storyteller sees each role's prompt in sequence during the night",
+      "Queue does not advance until the Storyteller confirms each step",
+      "Storyteller dashboard shows relevant information for each role's ability",
+      "Storyteller can provide input (selections, overrides) for each role prompt"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'night dashboard'",
+      "test:e2e -- --grep 'night phase'"
+    ],
+    "human_review": [
+      "Verify night dashboard UI is clear and shows the right info per role"
+    ],
+    "passes": false
+  },
+  {
+    "id": "NIGHT-03",
+    "category": "night-phase",
+    "description": "End Night: Storyteller confirms, changes are committed, dawn fires",
+    "acceptance_criteria": [
+      "Storyteller has an 'End Night' button that commits all night changes",
+      "All Storyteller actions within a night phase are reversible until End Night is confirmed",
+      "After End Night, night changes are committed to the game log and become permanent",
+      "Dawn announcement fires after End Night is confirmed"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'end night'",
+      "test:unit -- --grep 'night commit'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ST-01",
+    "category": "storyteller",
+    "description": "Storyteller override: can override any game event before it is committed",
+    "acceptance_criteria": [
+      "Storyteller can override any night action result before confirming End Night",
+      "Override hooks exist at every phase transition and ability resolution step",
+      "Storyteller's action always takes precedence over automated logic",
+      "Override history is recorded in the game log"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'storyteller override'",
+      "test:e2e -- --grep 'override'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ST-02",
+    "category": "storyteller",
+    "description": "Grimoire: Storyteller's private dashboard with full game state",
+    "acceptance_criteria": [
+      "Grimoire shows every player's true role and alive/dead status",
+      "Grimoire shows the Drunk's apparent role",
+      "Grimoire shows every player's current poison status",
+      "Grimoire shows the Fortune Teller's red herring player",
+      "Grimoire shows Scarlet Woman trigger status",
+      "Grimoire shows ghost vote tracking (which dead players have used their vote)",
+      "Grimoire shows the current night queue and position",
+      "Grimoire has a free-text notes field for the Storyteller",
+      "Grimoire is never visible to players (server enforces this)"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'grimoire'",
+      "test:e2e -- --grep 'grimoire'"
+    ],
+    "human_review": [
+      "Verify Grimoire layout is usable during fast-paced gameplay"
+    ],
+    "passes": false
+  },
+  {
+    "id": "WIN-01",
+    "category": "win-conditions",
+    "description": "All win conditions fire correctly and in priority order",
+    "acceptance_criteria": [
+      "Saint executed: Good loses immediately at the moment of execution (if Saint is not poisoned)",
+      "Demon executed: Good wins at the moment of execution",
+      "Scarlet Woman trigger: if Demon dies and SW ability triggers (5+ alive, not poisoned), SW becomes Imp and game continues",
+      "Mayor win: if 3 players alive, no execution occurred, Mayor alive and not poisoned, Good wins",
+      "Evil win: if only 2 players remain alive at dawn after night kills, Evil wins",
+      "Win condition checks run in priority order (Saint > Demon > SW > Mayor > Evil)",
+      "Game transitions to end state, reveals all roles, announces winning team"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'win condition'",
+      "test:unit -- --grep 'Saint execution'",
+      "test:unit -- --grep 'Demon execution'",
+      "test:unit -- --grep 'Mayor win'",
+      "test:unit -- --grep 'Evil win'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-WASHERWOMAN",
+    "category": "role-abilities",
+    "description": "Washerwoman: Night 1 only, learns one of two players is a specific Townsfolk",
+    "acceptance_criteria": [
+      "Fires on Night 1 only via AbilityContext",
+      "Storyteller is prompted to choose two players and a Townsfolk role to reveal",
+      "One of the two players must actually be that Townsfolk role",
+      "Player receives the two-player-and-role information via WebSocket",
+      "If poisoned or drunk (context.isPoisoned || context.isDrunk), Storyteller provides false information"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Washerwoman'",
+      "test:unit -- --grep 'Washerwoman poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-LIBRARIAN",
+    "category": "role-abilities",
+    "description": "Librarian: Night 1 only, learns one of two players is a specific Outsider",
+    "acceptance_criteria": [
+      "Fires on Night 1 only via AbilityContext",
+      "Storyteller is prompted to choose two players and an Outsider role to reveal",
+      "One of the two must actually be that Outsider role",
+      "If no Outsiders in the game, Librarian learns 'no Outsiders'",
+      "If poisoned or drunk, Storyteller provides false information"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Librarian'",
+      "test:unit -- --grep 'Librarian no outsiders'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-INVESTIGATOR",
+    "category": "role-abilities",
+    "description": "Investigator: Night 1 only, learns one of two players is a specific Minion",
+    "acceptance_criteria": [
+      "Fires on Night 1 only via AbilityContext",
+      "Storyteller is prompted to choose two players and a Minion role to reveal",
+      "One of the two must actually be that Minion role",
+      "Recluse may be shown as the Minion (Storyteller's choice)",
+      "If poisoned or drunk, Storyteller provides false information"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Investigator'",
+      "test:unit -- --grep 'Investigator Recluse'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-CHEF",
+    "category": "role-abilities",
+    "description": "Chef: Night 1 only, learns number of evil pairs sitting adjacent",
+    "acceptance_criteria": [
+      "Fires on Night 1 only via AbilityContext",
+      "Returns the number of pairs of Evil players sitting adjacent to each other around the circle",
+      "Seating order is determined by join order or Storyteller arrangement",
+      "If poisoned or drunk, returns a false number"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Chef'",
+      "test:unit -- --grep 'Chef poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-EMPATH",
+    "category": "role-abilities",
+    "description": "Empath: each night, learns how many living neighbors are Evil",
+    "acceptance_criteria": [
+      "Fires every night via AbilityContext",
+      "Returns 0, 1, or 2 based on how many of the Empath's two living neighbors are Evil",
+      "If a neighbor dies, the next living player in that direction becomes the neighbor",
+      "Neighbors are computed dynamically each night based on current alive state",
+      "Recluse may register as Evil at Storyteller's discretion",
+      "If poisoned or drunk, returns a false number"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Empath'",
+      "test:unit -- --grep 'Empath dead neighbors'",
+      "test:unit -- --grep 'Empath poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-FORTUNE-TELLER",
+    "category": "role-abilities",
+    "description": "Fortune Teller: each night, chooses two players, learns if either is the Demon",
+    "acceptance_criteria": [
+      "Fires every night via AbilityContext",
+      "Player chooses any two players",
+      "Returns yes if either chosen player is the Demon OR is the designated red herring",
+      "Red herring always returns yes even if dead",
+      "Recluse may register as Demon at Storyteller's discretion",
+      "If poisoned or drunk, may return false information"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Fortune Teller'",
+      "test:unit -- --grep 'Fortune Teller red herring'",
+      "test:unit -- --grep 'Fortune Teller poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-UNDERTAKER",
+    "category": "role-abilities",
+    "description": "Undertaker: each night after first, learns the role of the player executed that day",
+    "acceptance_criteria": [
+      "Fires every night except Night 1 via AbilityContext",
+      "If a player was executed the previous day, Undertaker learns their true role",
+      "If no execution occurred, Undertaker learns nothing",
+      "If poisoned or drunk, may receive false role information"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Undertaker'",
+      "test:unit -- --grep 'Undertaker no execution'",
+      "test:unit -- --grep 'Undertaker poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-MONK",
+    "category": "role-abilities",
+    "description": "Monk: each night (not first), chooses a player to protect from the Demon",
+    "acceptance_criteria": [
+      "Fires every night except Night 1 via AbilityContext",
+      "Player chooses any player other than themselves",
+      "Protected player cannot be killed by the Demon that night",
+      "Monk cannot protect themselves",
+      "If poisoned, protection has no effect (target can be killed)"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Monk'",
+      "test:unit -- --grep 'Monk protection'",
+      "test:unit -- --grep 'Monk poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-RAVENKEEPER",
+    "category": "role-abilities",
+    "description": "Ravenkeeper: if killed by the Demon at night, chooses a player and learns their role",
+    "acceptance_criteria": [
+      "Triggers only if the Ravenkeeper is killed by the Demon at night",
+      "Upon triggering, Ravenkeeper immediately chooses any player",
+      "Ravenkeeper learns the chosen player's true role",
+      "If poisoned when killed, may receive false role information",
+      "Does not trigger if Ravenkeeper dies by execution"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Ravenkeeper'",
+      "test:unit -- --grep 'Ravenkeeper poisoned'",
+      "test:unit -- --grep 'Ravenkeeper execution'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-VIRGIN",
+    "category": "role-abilities",
+    "description": "Virgin: first time nominated by a Townsfolk, that Townsfolk is executed",
+    "acceptance_criteria": [
+      "One-time passive ability that triggers on the first nomination of the Virgin",
+      "If the nominator is a Townsfolk (including the Drunk's apparent role), the nominator is immediately executed",
+      "After triggering (successfully or not), the ability is spent",
+      "If poisoned when nominated, the ability does not trigger",
+      "The Drunk's nomination counts as Townsfolk (uses apparent role)"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Virgin'",
+      "test:unit -- --grep 'Virgin Drunk'",
+      "test:unit -- --grep 'Virgin poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-SLAYER",
+    "category": "role-abilities",
+    "description": "Slayer: once per game during the day, can attempt to slay the Demon",
+    "acceptance_criteria": [
+      "One-time active ability usable during the day phase",
+      "Slayer publicly declares target",
+      "If target is the Demon, target dies immediately",
+      "If target is not the Demon, nothing happens",
+      "Ability is spent regardless of outcome",
+      "If poisoned, the ability has no effect even if targeting the Demon"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Slayer'",
+      "test:unit -- --grep 'Slayer hit'",
+      "test:unit -- --grep 'Slayer miss'",
+      "test:unit -- --grep 'Slayer poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-SOLDIER",
+    "category": "role-abilities",
+    "description": "Soldier: cannot be killed by the Demon at night",
+    "acceptance_criteria": [
+      "Passive ability: Demon's night kill has no effect on the Soldier",
+      "If the Soldier is poisoned, they lose this protection and can be killed",
+      "Protection only applies to the Demon's kill, not execution or other effects"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Soldier'",
+      "test:unit -- --grep 'Soldier poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-MAYOR",
+    "category": "role-abilities",
+    "description": "Mayor: bounced kill and 3-player no-execution Good win",
+    "acceptance_criteria": [
+      "If only 3 players alive and no execution occurs that day, Good wins (if Mayor alive and not poisoned)",
+      "If Mayor is killed by Demon at night, Storyteller may redirect the kill to another player",
+      "Redirect target is chosen by the Storyteller before dawn",
+      "If Mayor is poisoned, neither ability applies"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Mayor'",
+      "test:unit -- --grep 'Mayor win'",
+      "test:unit -- --grep 'Mayor redirect'",
+      "test:unit -- --grep 'Mayor poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-BUTLER",
+    "category": "role-abilities",
+    "description": "Butler: each night chooses a master; can only vote when master votes",
+    "acceptance_criteria": [
+      "Each night, Butler chooses a player (not themselves) as their master",
+      "The following day, Butler may only vote if their master is also voting on the same nomination",
+      "Butler's vote token is locked until the master votes or the nomination closes",
+      "If the master dies before a vote, the Butler votes freely (constraint lifted)",
+      "Master alive status is checked at vote time, not at start of day",
+      "If poisoned or drunk, the Butler may vote freely"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Butler'",
+      "test:unit -- --grep 'Butler vote constraint'",
+      "test:unit -- --grep 'Butler dead master'",
+      "test:unit -- --grep 'Butler poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-DRUNK",
+    "category": "role-abilities",
+    "description": "Drunk: believes they are a Townsfolk, but their ability always produces corrupted output",
+    "acceptance_criteria": [
+      "Drunk's client shows their apparent Townsfolk role (never 'Drunk')",
+      "Drunk's apparent ability fires in the night queue as normal",
+      "All results produced by the Drunk's ability are corrupted (context.isDrunk is true)",
+      "Storyteller manually provides false information for the Drunk's night result",
+      "Drunk's night prompt flags to the Storyteller that this player is the Drunk",
+      "Drunk's apparent role is a Townsfolk not otherwise in the game"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Drunk'",
+      "test:unit -- --grep 'Drunk ability'",
+      "test:unit -- --grep 'Drunk context'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-RECLUSE",
+    "category": "role-abilities",
+    "description": "Recluse: may register as Evil to detection abilities at Storyteller's discretion",
+    "acceptance_criteria": [
+      "Recluse may register as Evil or as a Minion role to detection abilities",
+      "Storyteller decides case-by-case whether the Recluse registers as Evil",
+      "Affected abilities: Fortune Teller, Investigator, Empath, Chef",
+      "Recluse is actually Good and on the Good team for win conditions",
+      "System presents the Storyteller with an option to mark the Recluse as Evil for each relevant check"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Recluse'",
+      "test:unit -- --grep 'Recluse registration'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-SAINT",
+    "category": "role-abilities",
+    "description": "Saint: if executed, Good loses immediately",
+    "acceptance_criteria": [
+      "If the Saint is executed by the town, Good loses immediately",
+      "Loss triggers at the moment of execution, before any other end-of-day checks",
+      "If the Saint is poisoned, execution proceeds normally without triggering the loss",
+      "Saint dying at night (Demon kill) does not trigger the loss"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Saint'",
+      "test:unit -- --grep 'Saint execution'",
+      "test:unit -- --grep 'Saint poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-POISONER",
+    "category": "role-abilities",
+    "description": "Poisoner: each night, poisons a player (corrupts their ability)",
+    "acceptance_criteria": [
+      "Fires every night (including Night 1) via AbilityContext",
+      "Poisoner chooses any player to poison",
+      "Poison applies from the moment the Poisoner acts in the night queue",
+      "Poison lasts until the Poisoner acts again the following night",
+      "A poisoned player's ability produces false/ineffective results",
+      "Poison status is visible in the Grimoire",
+      "Poisoner's identity is known to the Demon on Night 1"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Poisoner'",
+      "test:unit -- --grep 'Poisoner timing'",
+      "test:unit -- --grep 'poison duration'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-SPY",
+    "category": "role-abilities",
+    "description": "Spy: may see the Grimoire and register as Good to detection abilities",
+    "acceptance_criteria": [
+      "Spy may see the full Grimoire (all role assignments, alive/dead, poison, drunk status)",
+      "Grimoire view is shown by the Storyteller during the Spy's night prompt",
+      "Spy may register as Good or as a Townsfolk/Outsider to detection abilities (Storyteller's choice)",
+      "Spy is on the Evil team for win conditions",
+      "Spy's identity is known to the Demon on Night 1"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Spy'",
+      "test:unit -- --grep 'Spy registration'",
+      "test:unit -- --grep 'Spy grimoire'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-SCARLET-WOMAN",
+    "category": "role-abilities",
+    "description": "Scarlet Woman: becomes the Demon if the Demon dies with 5+ players alive",
+    "acceptance_criteria": [
+      "If the Demon dies and there are 5 or more players alive at the moment of death, Scarlet Woman becomes the new Imp",
+      "Alive count is checked BEFORE applying the Demon's death",
+      "Transformation is secret; only the Storyteller knows",
+      "Good does not win when Scarlet Woman trigger activates",
+      "If the Scarlet Woman is poisoned when the Demon dies, the ability does not trigger",
+      "Scarlet Woman does NOT trigger on Imp star-pass (only on actual Demon death)"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Scarlet Woman'",
+      "test:unit -- --grep 'Scarlet Woman timing'",
+      "test:unit -- --grep 'Scarlet Woman poisoned'",
+      "test:unit -- --grep 'Scarlet Woman star-pass'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-BARON",
+    "category": "role-abilities",
+    "description": "Baron: setup ability adds 2 Outsiders to the game (replaces 2 Townsfolk)",
+    "acceptance_criteria": [
+      "Baron's ability fires once at game start during role assignment",
+      "2 Townsfolk slots are replaced by 2 Outsider slots",
+      "Baron has no night ability",
+      "Adjusted distribution still totals the correct player count"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Baron'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "ABILITY-IMP",
+    "category": "role-abilities",
+    "description": "Imp: kills one player per night, can star-pass to a Minion",
+    "acceptance_criteria": [
+      "Fires every night except Night 1 via AbilityContext",
+      "Imp chooses a player to kill; target is marked dead at dawn",
+      "If Imp targets a Monk-protected player, the kill has no effect",
+      "If Imp targets the Soldier (not poisoned), the kill has no effect",
+      "If Imp targets the Mayor, Storyteller may redirect the kill",
+      "If Imp kills themselves (star-pass), they die and a Minion of Storyteller's choice becomes the new Imp",
+      "Star-pass updates role assignments in the Grimoire",
+      "Scarlet Woman does NOT trigger on star-pass",
+      "If Imp is poisoned, the kill does not resolve"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Imp'",
+      "test:unit -- --grep 'Imp kill'",
+      "test:unit -- --grep 'star-pass'",
+      "test:unit -- --grep 'Imp Monk'",
+      "test:unit -- --grep 'Imp Soldier'",
+      "test:unit -- --grep 'Imp poisoned'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "EDGE-01",
+    "category": "edge-cases",
+    "description": "Poisoner timing: poison lasts from Poisoner's night action until next night",
+    "acceptance_criteria": [
+      "A player poisoned on Night N is poisoned for all of Night N (including abilities after Poisoner in queue) and all of Day N",
+      "Poison expires when Night N+1 begins (unless re-poisoned)",
+      "Poison status is correctly computed for abilities firing after the Poisoner in the queue"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Poisoner timing'",
+      "test:unit -- --grep 'poison expiry'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "EDGE-02",
+    "category": "edge-cases",
+    "description": "Drunk + detection abilities: Storyteller manually provides false info",
+    "acceptance_criteria": [
+      "When the Drunk's apparent ability fires, the Storyteller is flagged that this player is the Drunk",
+      "Storyteller manually enters false information for the Drunk's ability result",
+      "The Drunk receives the Storyteller-provided false info, not auto-computed info"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Drunk detection'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "EDGE-03",
+    "category": "edge-cases",
+    "description": "Virgin + Drunk nominator: Drunk counts as Townsfolk for Virgin trigger",
+    "acceptance_criteria": [
+      "If the Drunk nominates the Virgin, the Virgin's ability triggers (Drunk's apparent role is Townsfolk)",
+      "The Drunk is executed as a result",
+      "The system uses the apparent role (not true role) for the Virgin check"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'Virgin Drunk'"
+    ],
+    "human_review": [],
+    "passes": false
+  },
+  {
+    "id": "STATE-01",
+    "category": "architecture",
+    "description": "Single authoritative state machine: all mutations go through gameStateMachine.ts",
+    "acceptance_criteria": [
+      "All game state mutations pass through a single server-side state machine",
+      "Client is read-only; receives state diffs over WebSocket and renders them",
+      "No client-side code mutates game state directly",
+      "State machine is the single source of truth for all game data"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'state machine'",
+      "test:unit -- --grep 'state mutation'"
+    ],
+    "human_review": [
+      "Audit codebase to confirm no client-side state mutations exist"
+    ],
+    "passes": false
+  },
+  {
+    "id": "STATE-02",
+    "category": "architecture",
+    "description": "Role file structure: each role is a self-contained module",
+    "acceptance_criteria": [
+      "Each role is implemented in src/roles/[roleName].ts",
+      "Each module exports: role metadata (name, team, type), night order position, ability handler",
+      "No role file imports from another role file",
+      "Cross-role interactions are handled by the state machine"
+    ],
+    "automated_tests": [
+      "test:unit -- --grep 'role module'"
+    ],
+    "human_review": [
+      "Audit role files to confirm no cross-role imports"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-01",
+    "category": "ui",
+    "description": "Player client: role card view, day/night phase indicators, vote UI",
+    "acceptance_criteria": [
+      "Player sees their role card with name, team, and ability description",
+      "Day/night phase transitions are visually indicated",
+      "Vote UI shows nomination, allows voting, and reveals results",
+      "Dead players are visually distinguished from alive players",
+      "Player cannot see other players' roles"
+    ],
+    "automated_tests": [
+      "test:e2e -- --grep 'player UI'"
+    ],
+    "human_review": [
+      "Verify overall player UI is usable and clear"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-02",
+    "category": "ui",
+    "description": "Seating circle: players arranged in a circle reflecting game seating",
+    "acceptance_criteria": [
+      "Players are displayed in a circle layout on all clients",
+      "Seating order is consistent across all clients",
+      "Dead players are visually marked in the circle",
+      "Circle layout is used for adjacency calculations (Chef, Empath)"
+    ],
+    "automated_tests": [
+      "test:e2e -- --grep 'seating circle'"
+    ],
+    "human_review": [
+      "Verify circle layout renders correctly at different player counts"
+    ],
+    "passes": false
+  },
+  {
+    "id": "E2E-01",
+    "category": "integration",
+    "description": "Full 7-player Trouble Brewing game completes start to finish",
+    "acceptance_criteria": [
+      "7 players can create a game, join, receive roles, and play through night and day phases",
+      "Night abilities fire in order and produce correct output",
+      "Day voting and execution work correctly",
+      "Win conditions trigger correctly",
+      "Game ends with role reveal and winner announcement",
+      "No console errors during the full game"
+    ],
+    "automated_tests": [
+      "test:e2e -- --grep 'full game'"
+    ],
+    "human_review": [
+      "Play through a full game manually to verify overall experience"
+    ],
+    "passes": false
+  }
+]

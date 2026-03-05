@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.dev-server.pid
+logs/*.log
+*.sqlite
+*.bak

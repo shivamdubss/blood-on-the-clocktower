@@ -1,0 +1,16 @@
+import type { RoleMetadata } from '../types/game.js';
+import type { AbilityHandler } from '../types/ability.js';
+
+export const metadata: RoleMetadata = {
+  id: 'fortuneTeller',
+  name: 'Fortune Teller',
+  team: 'townsfolk',
+  type: 'townsfolk',
+  ability: '',
+  firstNight: false,
+  otherNights: false,
+};
+
+export const abilityHandler: AbilityHandler = (_context, _input) => {
+  return { success: true };
+};
