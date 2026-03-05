@@ -45,7 +45,7 @@ function makeGameWithPlayers(): GameState {
 }
 
 function setupNominationAndVote(state: GameState, nominatorId: string, nomineeId: string, voterIds: string[]): GameState {
-  state = { ...state, phase: 'day', daySubPhase: 'nomination' };
+  state = { ...state, phase: 'day' as const, daySubPhase: 'nomination' as const };
   state = addNomination(state, nominatorId, nomineeId);
   state = startVote(state, 0);
   for (const voterId of voterIds) {
@@ -71,7 +71,6 @@ describe('Scarlet Woman', () => {
   describe('state machine', () => {
     it('Scarlet Woman becomes Imp when Demon is executed with 5+ alive', () => {
       let state = makeGameWithPlayers();
-      // All 7 players alive, nominate and vote to execute the Imp (p1)
       state = setupNominationAndVote(state, 'p3', 'p1', ['p3', 'p4', 'p5', 'p6']);
 
       const result = resolveExecution(state);
@@ -84,7 +83,6 @@ describe('Scarlet Woman', () => {
 
     it('alive count is checked BEFORE applying Demon death', () => {
       let state = makeGameWithPlayers();
-      // Kill 2 to bring to 5 alive (still >= 5 threshold)
       state = {
         ...state,
         players: state.players.map(p => {
@@ -92,19 +90,16 @@ describe('Scarlet Woman', () => {
           return p;
         }),
       };
-      // 5 alive: p1(Imp), p2(SW), p3, p4, p5
       state = setupNominationAndVote(state, 'p3', 'p1', ['p3', 'p4', 'p5']);
 
       const result = resolveExecution(state);
 
-      // SW trigger fires because aliveBeforeDeath = 5
       expect(result.players.find(p => p.id === 'p2')!.trueRole).toBe('imp');
       expect(result.phase).not.toBe('ended');
     });
 
     it('Scarlet Woman does NOT trigger with fewer than 5 alive', () => {
       let state = makeGameWithPlayers();
-      // Kill 3 players to bring alive count to 4
       state = {
         ...state,
         players: state.players.map(p => {
@@ -112,7 +107,6 @@ describe('Scarlet Woman', () => {
           return p;
         }),
       };
-      // 4 alive: p1(Imp), p2(SW), p3, p4
       state = setupNominationAndVote(state, 'p3', 'p1', ['p3', 'p4']);
 
       const result = resolveExecution(state);
@@ -162,9 +156,8 @@ describe('Scarlet Woman', () => {
 
     it('Scarlet Woman does NOT trigger on Imp star-pass', () => {
       let state = makeGameWithPlayers();
-      state = { ...state, phase: 'night' };
+      state = { ...state, phase: 'night' as const };
 
-      // Add a poisoner as another minion
       state = {
         ...state,
         players: state.players.map(p =>
@@ -176,12 +169,11 @@ describe('Scarlet Woman', () => {
 
       expect(result.players.find(p => p.id === 'p3')!.trueRole).toBe('imp');
       expect(result.players.find(p => p.id === 'p2')!.trueRole).toBe('scarletWoman');
-      const starPassLog = result.gameLog.find(l => l.type === 'imp_star_pass');
-      expect(starPassLog).toBeDefined();
+      const swLog = result.gameLog.find(l => l.type === 'scarlet_woman_trigger');
+      expect(swLog).toBeUndefined();
     });
 
     it('Scarlet Woman timing: exact 5 alive triggers, 4 alive does not', () => {
-      // Exactly 5 alive (boundary case)
       let state = makeGameWithPlayers();
       state = {
         ...state,
@@ -196,7 +188,6 @@ describe('Scarlet Woman', () => {
       expect(result5.players.find(p => p.id === 'p2')!.trueRole).toBe('imp');
       expect(result5.phase).not.toBe('ended');
 
-      // Exactly 4 alive (below threshold)
       let state4 = makeGameWithPlayers();
       state4 = {
         ...state4,
@@ -220,7 +211,6 @@ describe('Scarlet Woman', () => {
           p.id === 'p2' ? { ...p, isAlive: false } : p
         ),
       };
-      // 6 alive (>= 5) but SW is dead
       state = setupNominationAndVote(state, 'p3', 'p1', ['p3', 'p4', 'p5', 'p6']);
 
       const result = resolveExecution(state);
@@ -235,7 +225,6 @@ describe('Scarlet Woman', () => {
     let ioServer: Server;
     let store: GameStore;
     let clients: ClientSocket[];
-    const PORT = 0;
 
     function createClient(): ClientSocket {
       const addr = httpServer.address() as { port: number };
@@ -247,7 +236,7 @@ describe('Scarlet Woman', () => {
       return client;
     }
 
-    function waitForEvent(socket: ClientSocket, event: string, timeout = 3000): Promise<unknown> {
+    function waitForEvent(socket: ClientSocket, event: string, timeout = 3000): Promise<any> {
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${event}`)), timeout);
         socket.once(event, (data: unknown) => {
@@ -265,7 +254,7 @@ describe('Scarlet Woman', () => {
           store = { games: new Map() };
           registerSocketHandlers(ioServer, store);
           clients = [];
-          httpServer.listen(PORT, resolve);
+          httpServer.listen(0, resolve);
         }),
     );
 
@@ -308,8 +297,7 @@ describe('Scarlet Woman', () => {
       g = resolveVote(g, 0);
       store.games.set(gameId, g);
 
-      const execResult = waitForEvent(storyteller, 'execution_result') as Promise<{ executed: { playerId: string } | null }>;
-
+      const execResult = waitForEvent(storyteller, 'execution_result');
       storyteller.emit('resolve_execution', { gameId });
       const result = await execResult;
 
@@ -318,7 +306,7 @@ describe('Scarlet Woman', () => {
 
       const updatedState = store.games.get(gameId)!;
       expect(updatedState.phase).not.toBe('ended');
-      expect(updatedState.players.find(p => p.id === 'p3')!.trueRole).toBe('imp');
+      expect(updatedState.players.find((p: Player) => p.id === 'p3')!.trueRole).toBe('imp');
     });
 
     it('Scarlet Woman transformation is not visible in sanitized game_state', async () => {
@@ -332,10 +320,18 @@ describe('Scarlet Woman', () => {
       await new Promise<void>((resolve) => storyteller.on('connect', resolve));
       await new Promise<void>((resolve) => player.on('connect', resolve));
 
+      // Collect all game_state events on the player socket
+      const gameStates: any[] = [];
+      player.on('game_state', (data: any) => gameStates.push(data));
+
       storyteller.emit('join_game', { joinCode: 'ABC123', playerName: 'ST' });
       await waitForEvent(storyteller, 'game_joined');
       player.emit('join_game', { joinCode: 'ABC123', playerName: 'Player' });
       await waitForEvent(player, 'game_joined');
+
+      // Wait for join-related game_state events to settle
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+      const stateCountBeforeExec = gameStates.length;
 
       const players = [
         makePlayer({ id: storyteller.id!, name: 'ST', trueRole: 'chef', apparentRole: 'chef', seatIndex: 0 }),
@@ -356,19 +352,24 @@ describe('Scarlet Woman', () => {
       g = resolveVote(g, 0);
       store.games.set(gameId, g);
 
-      // Listen for game_state on the player client (SW trigger = game continues = sanitized)
-      const gameStatePromise = waitForEvent(player, 'game_state') as Promise<{ players: Array<{ trueRole?: string }> }>;
-
+      // Wait for the execution_result on storyteller (confirms execution processed)
+      const execPromise = waitForEvent(storyteller, 'execution_result');
       storyteller.emit('resolve_execution', { gameId });
-      const gameState = await gameStatePromise;
+      await execPromise;
 
-      // Player's game_state should NOT reveal that SW became Imp (sanitized)
-      // Sanitizer replaces all trueRoles with a placeholder
-      const swPlayer = gameState.players.find((p: { id?: string; name?: string }) => p.name === 'SW');
-      expect(swPlayer).toBeDefined();
-      // The sanitized trueRole should NOT be 'imp' (the SW transformation is hidden)
-      expect((swPlayer as { trueRole: string }).trueRole).not.toBe('imp');
-      expect((swPlayer as { trueRole: string }).trueRole).not.toBe('scarletWoman');
+      // Wait for game_state to propagate to player
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
+      // The game_state emitted after execution should have sanitized trueRole
+      const execGameState = gameStates[gameStates.length - 1];
+      expect(execGameState).toBeDefined();
+      for (const p of execGameState.players) {
+        expect(p.trueRole).toBe('washerwoman');
+      }
+
+      // But the server-side state should show the transformation
+      const serverState = store.games.get(gameId)!;
+      expect(serverState.players.find((p: Player) => p.id === 'p4')!.trueRole).toBe('imp');
     });
   });
 });

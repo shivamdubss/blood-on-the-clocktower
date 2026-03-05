@@ -778,7 +778,7 @@
       "test:unit -- --grep 'Scarlet Woman star-pass'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-BARON",

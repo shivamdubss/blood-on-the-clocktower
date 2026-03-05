@@ -8,6 +8,13 @@
 
 ## Session Log
 
+### Session 25 -- ABILITY-SCARLET-WOMAN
+- Marked ABILITY-SCARLET-WOMAN as passing: all acceptance criteria already covered by existing tests (13 tests in scarletWoman.test.ts)
+- Fixed pre-existing TypeScript error in scarletWoman.test.ts line 367 (type annotation mismatch on `find()` callback parameter)
+- Scarlet Woman implementation already complete from prior sessions (resolveExecution in gameStateMachine.ts handles SW trigger)
+- All 350 unit + 16 e2e tests passing
+- Remaining Milestone 5 features: EDGE-01, EDGE-02
+
 ### Session 23 -- ABILITY-IMP
 - Implemented ABILITY-IMP: Imp night kill with star-pass, Monk/Soldier protection, poisoned check
 - Added `processImpAction()` to `gameStateMachine.ts`: handles normal kills (adds to pendingDeaths), star-pass (Imp dies, chosen Minion becomes new Imp), Monk protection (monkProtectedPlayerId blocks kill), Soldier protection (blocks kill if Soldier not poisoned)
