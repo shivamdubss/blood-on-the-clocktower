@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 37 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER)
-- **Last Known Working State:** All tests passing (525 unit, 16 e2e)
-- **Last Session:** Session 35
+- **Features Completed:** 38 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER)
+- **Last Known Working State:** All tests passing (556 unit, 16 e2e)
+- **Last Session:** Session 36
 
 ## Session Log
+
+### Session 36 -- ABILITY-SLAYER
+- Marked ABILITY-SLAYER as passing: implementation was already complete from prior sessions (processSlayerAction in gameStateMachine.ts, slayer_action socket handler in socketHandlers.ts)
+- Fixed flaky WebSocket test: "Slayer kills the Demon and all clients receive slayer_result" was timing out because random role assignment could include Scarlet Woman, preventing game_over; fix ensures SW is replaced with poisoner in the test setup
+- Slayer is a one-time active day ability: player publicly chooses a target, if target is the Demon they die immediately
+- processSlayerAction checks: slayerAbilityUsed flag, isPoisoned/isDrunk (no effect if corrupted), target trueRole === 'imp' for kill, Scarlet Woman trigger on Demon death
+- Socket handler validates: day phase, player is alive, player is Slayer (trueRole or apparentRole), ability not already used, target exists and alive
+- 15 tests in slayer.test.ts: 9 state machine tests (hit, miss, spent, poisoned, drunk, SW trigger, Good win, logging, purity) + 6 WebSocket tests (kill Demon, miss, poisoned, second use error, non-Slayer error, night phase error)
+- All 556 unit + 16 e2e tests passing
+- Next feature: ABILITY-SOLDIER
 
 ### Session 35 -- ABILITY-RAVENKEEPER
 - Implemented ABILITY-RAVENKEEPER: Ravenkeeper chooses a player and learns their role when killed by the Demon at night

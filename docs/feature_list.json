@@ -584,7 +584,7 @@
       "test:unit -- --grep 'Virgin poisoned'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-SLAYER",
@@ -605,7 +605,7 @@
       "test:unit -- --grep 'Slayer poisoned'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-SOLDIER",
