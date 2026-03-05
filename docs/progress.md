@@ -1,12 +1,20 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 5 (Evil Team Abilities + Poisoner/Drunk System)
-- **Features Completed:** 26 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN)
-- **Last Known Working State:** All tests passing (350 unit, 16 e2e)
-- **Last Session:** Session 25
+- **Current Milestone:** Milestone 6 (Townsfolk Abilities)
+- **Features Completed:** 28 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02)
+- **Last Known Working State:** All tests passing (356 unit, 16 e2e)
+- **Last Session:** Session 26
 
 ## Session Log
+
+### Session 26 -- EDGE-01 + EDGE-02
+- Marked EDGE-01 as passing: Poisoner timing tests already existed in `poisonerTiming.test.ts` (7 tests) covering all acceptance criteria (poison persists through Night N and Day N, expires at Night N+1, correctly computed for abilities after Poisoner in queue)
+- Marked EDGE-02 as passing: wrote 5 new tests in `drunkDetection.test.ts` covering all acceptance criteria (Storyteller flagged with DRUNK warning in prompt, Storyteller provides false info via input, Drunk receives Storyteller-provided info, isDrunk flag in AbilityContext)
+- Implementation for both features was already complete from prior sessions (transitionToNight clears poison, processPoisonerAction applies it; getNightPromptInfo flags Drunk with warning text)
+- All 356 unit + 16 e2e tests passing
+- MILESTONE 5 COMPLETE
+- Next milestone: Milestone 6 (Townsfolk Abilities)
 
 ### Session 25 -- ABILITY-SCARLET-WOMAN
 - Marked ABILITY-SCARLET-WOMAN as passing: all acceptance criteria already covered by existing tests (13 tests in scarletWoman.test.ts)
