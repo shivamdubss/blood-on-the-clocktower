@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processImpAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -648,6 +648,17 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
           const poisoner = processedGame.players.find((p) => p.id === currentEntry.playerId);
           if (poisoner && !poisoner.isPoisoned) {
             processedGame = processPoisonerAction(processedGame, input.targetPlayerId);
+          }
+        }
+      }
+
+      if (currentEntry.roleId === 'imp') {
+        const input = data.input as { targetPlayerId?: string; starPassMinionId?: string } | undefined;
+        if (input?.targetPlayerId) {
+          // Only apply kill if the Imp is not poisoned
+          const impPlayer = processedGame.players.find((p) => p.id === currentEntry.playerId);
+          if (impPlayer && !impPlayer.isPoisoned) {
+            processedGame = processImpAction(processedGame, input.targetPlayerId, currentEntry.playerId, input.starPassMinionId);
           }
         }
       }

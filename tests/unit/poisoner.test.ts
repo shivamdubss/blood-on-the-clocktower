@@ -14,6 +14,7 @@ import {
 import { registerSocketHandlers, type GameStore } from '../../src/server/socketHandlers.js';
 import { abilityHandler } from '../../src/roles/poisoner.js';
 import type { GameState, Player, RoleId } from '../../src/types/game.js';
+import type { AbilityResult } from '../../src/types/ability.js';
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
@@ -129,7 +130,7 @@ describe('Poisoner', () => {
     it('returns success with target info when valid target provided', () => {
       const state = makeGameWithPlayers();
       const context = buildAbilityContext(state, 'p1', 1);
-      const result = abilityHandler(context, { targetPlayerId: 'p3' });
+      const result = abilityHandler(context, { targetPlayerId: 'p3' }) as AbilityResult;
 
       expect(result.success).toBe(true);
       expect((result.data as { targetPlayerId: string; effective: boolean }).targetPlayerId).toBe('p3');
@@ -139,7 +140,7 @@ describe('Poisoner', () => {
     it('returns failure when no target provided', () => {
       const state = makeGameWithPlayers();
       const context = buildAbilityContext(state, 'p1', 1);
-      const result = abilityHandler(context, undefined);
+      const result = abilityHandler(context, undefined) as AbilityResult;
 
       expect(result.success).toBe(false);
     });
@@ -148,7 +149,7 @@ describe('Poisoner', () => {
       let state = makeGameWithPlayers();
       state = poisonPlayer(state, 'p1');
       const context = buildAbilityContext(state, 'p1', 1);
-      const result = abilityHandler(context, { targetPlayerId: 'p3' });
+      const result = abilityHandler(context, { targetPlayerId: 'p3' }) as AbilityResult;
 
       expect(result.success).toBe(true);
       expect((result.data as { targetPlayerId: string; effective: boolean }).effective).toBe(false);

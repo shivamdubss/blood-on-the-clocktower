@@ -554,7 +554,12 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
   if (!roleMeta) return null;
 
   const promptType = getRolePromptType(entry.roleId);
-  const promptDescription = getRolePromptDescription(entry.roleId, player.name);
+  let promptDescription = getRolePromptDescription(entry.roleId, player.name);
+
+  // Flag to the Storyteller that this player is the Drunk
+  if (player.isDrunk) {
+    promptDescription += ` ⚠ THIS PLAYER IS THE DRUNK — provide false information.`;
+  }
 
   return {
     queuePosition: nightQueuePosition,
@@ -723,6 +728,95 @@ export function processPoisonerAction(state: GameState, targetPlayerId: string):
       {
         timestamp: Date.now(),
         type: 'poisoner_action',
+        data: { targetPlayerId },
+      },
+    ],
+  };
+}
+
+export function processImpAction(
+  state: GameState,
+  targetPlayerId: string,
+  impPlayerId: string,
+  starPassMinionId?: string
+): GameState {
+  const target = state.players.find((p) => p.id === targetPlayerId);
+  if (!target || !target.isAlive) return state;
+
+  const imp = state.players.find((p) => p.id === impPlayerId);
+  if (!imp) return state;
+
+  // Self-target = star-pass: Imp dies, a Minion becomes the new Imp
+  if (targetPlayerId === impPlayerId) {
+    let newState = addPendingDeath(state, impPlayerId);
+
+    // Find the Minion to become the new Imp
+    const minionId = starPassMinionId;
+    const minion = minionId
+      ? state.players.find((p) => p.id === minionId && p.isAlive && (p.trueRole === 'poisoner' || p.trueRole === 'spy' || p.trueRole === 'scarletWoman' || p.trueRole === 'baron'))
+      : state.players.find((p) => p.isAlive && (p.trueRole === 'poisoner' || p.trueRole === 'spy' || p.trueRole === 'scarletWoman' || p.trueRole === 'baron'));
+
+    if (minion) {
+      newState = {
+        ...newState,
+        players: newState.players.map((p) =>
+          p.id === minion.id ? { ...p, trueRole: 'imp' as const } : p
+        ),
+      };
+    }
+
+    return {
+      ...newState,
+      gameLog: [
+        ...newState.gameLog,
+        {
+          timestamp: Date.now(),
+          type: 'imp_star_pass',
+          data: { impPlayerId, newImpId: minion?.id ?? null },
+        },
+      ],
+    };
+  }
+
+  // Check Monk protection
+  if (state.monkProtectedPlayerId === targetPlayerId) {
+    return {
+      ...state,
+      gameLog: [
+        ...state.gameLog,
+        {
+          timestamp: Date.now(),
+          type: 'imp_kill_blocked',
+          data: { targetPlayerId, reason: 'monk_protection' },
+        },
+      ],
+    };
+  }
+
+  // Check Soldier protection (only if Soldier is not poisoned)
+  if (target.trueRole === 'soldier' && !target.isPoisoned) {
+    return {
+      ...state,
+      gameLog: [
+        ...state.gameLog,
+        {
+          timestamp: Date.now(),
+          type: 'imp_kill_blocked',
+          data: { targetPlayerId, reason: 'soldier_protection' },
+        },
+      ],
+    };
+  }
+
+  // Normal kill: add to pending deaths
+  const newState = addPendingDeath(state, targetPlayerId);
+  return {
+    ...newState,
+    gameLog: [
+      ...newState.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'imp_kill',
         data: { targetPlayerId },
       },
     ],
