@@ -1,12 +1,25 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 4 (Night Phase Infrastructure + Ability Context)
-- **Features Completed:** 21 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03)
-- **Last Known Working State:** All tests passing (230 unit, 16 e2e)
-- **Last Session:** Session 20
+- **Current Milestone:** Milestone 5 (Evil Team Abilities + Poisoner/Drunk System)
+- **Features Completed:** 22 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01)
+- **Last Known Working State:** All tests passing (255 unit, 16 e2e)
+- **Last Session:** Session 21
 
 ## Session Log
+
+### Session 21 -- ST-01
+- Implemented ST-01: Storyteller override system for overriding game events before commit
+- Added `StorytellerOverride` type to `src/types/game.ts` with 8 override types: kill_player, revive_player, set_poison, clear_poison, add_pending_death, remove_pending_death, modify_night_action, set_player_role
+- Replaced generic `applyStorytellOverride` (typo) with typed `applyStorytellerOverride()` in `gameStateMachine.ts` that handles each override type via switch statement and logs all overrides
+- Added `storyteller_override` socket handler: Storyteller-only, validates active game phase (not lobby/ended), applies override, sends updated Grimoire and sanitized game_state
+- Override hooks already exist at every phase transition (all transitions are Storyteller-controlled socket events)
+- Overrides during night are reversible until End Night is confirmed (modify_night_action can be applied multiple times)
+- Invalid overrides return same state reference, caught by socket handler and returned as error
+- Updated existing `stateMachine.test.ts` to use renamed function
+- 25 new tests in `storytellerOverride.test.ts`: 14 state machine tests + 11 WebSocket integration tests
+- All 255 unit + 16 e2e tests passing
+- MILESTONE 4 COMPLETE
 
 ### Session 20 -- NIGHT-03
 - Implemented NIGHT-03: End Night -- Storyteller confirms, changes are committed, dawn fires
