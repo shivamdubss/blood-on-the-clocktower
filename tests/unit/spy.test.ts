@@ -183,6 +183,31 @@ describe('Spy', () => {
       const result = abilityHandler(context, {});
       expect(result.success).toBe(true);
     });
+
+    it('Spy registration: prompt tells Storyteller that Spy may register as Good', () => {
+      let state = makeGameWithPlayers();
+      state = transitionToNight(state);
+
+      const spyIdx = state.nightQueue.findIndex(e => e.roleId === 'spy');
+      state = { ...state, nightQueuePosition: spyIdx };
+
+      const prompt = getNightPromptInfo(state);
+      expect(prompt).not.toBeNull();
+      expect(prompt!.roleId).toBe('spy');
+      // Prompt must inform the Storyteller about registration options
+      expect(prompt!.promptDescription).toContain('register as Good');
+      expect(prompt!.promptDescription).toContain('Townsfolk/Outsider');
+    });
+
+    it('Spy is on Evil team for win conditions', () => {
+      expect(spyMeta.team).toBe('minion');
+      // Minions are Evil team — verify Spy's true role is treated as Evil
+      const state = makeGameWithPlayers();
+      const spyPlayer = state.players.find(p => p.trueRole === 'spy');
+      expect(spyPlayer).toBeDefined();
+      // Spy should be on the evil team (minion team = evil)
+      expect(['minion', 'demon']).toContain(spyMeta.type);
+    });
   });
 
   describe('WebSocket', () => {
