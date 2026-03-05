@@ -2,11 +2,20 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 29 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN)
-- **Last Known Working State:** All tests passing (372 unit, 16 e2e)
-- **Last Session:** Session 27
+- **Features Completed:** 30 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN)
+- **Last Known Working State:** All tests passing (397 unit, 16 e2e)
+- **Last Session:** Session 28
 
 ## Session Log
+
+### Session 28 -- ABILITY-LIBRARIAN
+- Implemented ABILITY-LIBRARIAN: Librarian learns one of two players is a specific Outsider on Night 1, or learns "no Outsiders" if none in game
+- Updated `src/roles/librarian.ts` ability handler: validates two players + Outsider role, or accepts `noOutsiders: true` flag
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false information
+- Infrastructure already in place: librarian in NIGHT_1_ORDER, prompt type `choose_players_and_role`, prompt description mentioning Outsider, included in INFO_ROLES
+- 19 new tests in `librarian.test.ts`: 2 night order tests, 1 night prompt test, 11 ability handler tests (success, validation, noOutsiders, poisoned, drunk), 5 WebSocket tests (info delivery, noOutsiders delivery, poisoned info, isPoisoned flag, isDrunk flag)
+- All 397 unit + 16 e2e tests passing
+- Next feature: ABILITY-INVESTIGATOR
 
 ### Session 27 -- ABILITY-WASHERWOMAN
 - Marked ABILITY-WASHERWOMAN as passing: implementation was already complete from prior sessions (ability handler, night prompt, night_info delivery)
