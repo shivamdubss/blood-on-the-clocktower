@@ -334,7 +334,7 @@
       "test:unit -- --grep 'night commit'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ST-01",

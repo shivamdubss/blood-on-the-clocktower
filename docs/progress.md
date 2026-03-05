@@ -2,11 +2,20 @@
 
 ## Current State
 - **Current Milestone:** Milestone 4 (Night Phase Infrastructure + Ability Context)
-- **Features Completed:** 20 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02)
-- **Last Known Working State:** All tests passing (215 unit, 16 e2e)
-- **Last Session:** Session 19
+- **Features Completed:** 21 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03)
+- **Last Known Working State:** All tests passing (230 unit, 16 e2e)
+- **Last Session:** Session 20
 
 ## Session Log
+
+### Session 20 -- NIGHT-03
+- Implemented NIGHT-03: End Night -- Storyteller confirms, changes are committed, dawn fires
+- Added `commitNightActions()` to `gameStateMachine.ts`: logs all night queue entries as permanent `night_committed` game log entry
+- Added `revertNightQueueStep()` to `gameStateMachine.ts`: decrements nightQueuePosition, un-marks the last entry as completed, clears its storytellerInput
+- Added `end_night` socket handler: Storyteller-only, validates night phase, commits night actions, resolves dawn deaths, emits `night_ended` + `dawn_announcement` + `game_state`
+- Added `undo_night_action` socket handler: Storyteller-only, validates night phase, reverts last queue step, re-sends the reverted `night_prompt`
+- 15 new unit tests in `endNight.test.ts`: 6 state machine tests (commit, revert, edge cases) + 9 WebSocket integration tests (end night, dawn fires, auth checks, undo, reversibility)
+- All 230 unit + 16 e2e tests passing
 
 ### Session 19 -- NIGHT-02
 - Implemented NIGHT-02: Storyteller night dashboard with sequential prompts for each role in the queue

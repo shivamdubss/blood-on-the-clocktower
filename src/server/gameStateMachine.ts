@@ -565,6 +565,57 @@ export function advanceNightQueue(state: GameState, storytellerInput?: unknown):
   };
 }
 
+export function revertNightQueueStep(state: GameState): GameState {
+  const { nightQueue, nightQueuePosition } = state;
+  // Can only revert if we've advanced at least one step
+  if (nightQueuePosition <= 0) return state;
+
+  const prevPosition = nightQueuePosition - 1;
+  const updatedQueue = nightQueue.map((entry, i) =>
+    i === prevPosition
+      ? { ...entry, completed: false, storytellerInput: undefined }
+      : entry
+  );
+
+  return {
+    ...state,
+    nightQueue: updatedQueue,
+    nightQueuePosition: prevPosition,
+    gameLog: [
+      ...state.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'night_action_reverted',
+        data: {
+          queuePosition: prevPosition,
+          roleId: nightQueue[prevPosition].roleId,
+          playerId: nightQueue[prevPosition].playerId,
+        },
+      },
+    ],
+  };
+}
+
+export function commitNightActions(state: GameState): GameState {
+  return {
+    ...state,
+    gameLog: [
+      ...state.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'night_committed',
+        data: {
+          nightQueue: state.nightQueue.map((entry) => ({
+            roleId: entry.roleId,
+            playerId: entry.playerId,
+            completed: entry.completed,
+          })),
+        },
+      },
+    ],
+  };
+}
+
 export async function resolveAbility(
   state: GameState,
   playerId: string,

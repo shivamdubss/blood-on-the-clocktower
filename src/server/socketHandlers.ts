@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -654,6 +654,87 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       } else {
         socket.emit('night_queue_empty', {});
       }
+    });
+
+    socket.on('end_night', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('end_night_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('end_night_error', { message: 'Only the Storyteller can end the night' });
+        return;
+      }
+
+      if (game.phase !== 'night') {
+        socket.emit('end_night_error', { message: 'Can only end night during the night phase' });
+        return;
+      }
+
+      // Commit night actions (makes them permanent in the game log)
+      let updatedGame = commitNightActions(game);
+
+      // Resolve dawn deaths and transition to day
+      updatedGame = resolveDawnDeaths(updatedGame);
+      store.games.set(game.id, updatedGame);
+
+      // Build dawn announcement
+      const deaths = game.pendingDeaths.map((pid) => {
+        const player = game.players.find((p) => p.id === pid);
+        return { playerId: pid, playerName: player?.name ?? 'Unknown' };
+      });
+
+      io.to(game.id).emit('night_ended', {
+        dayNumber: updatedGame.dayNumber,
+      });
+
+      io.to(game.id).emit('dawn_announcement', {
+        deaths,
+        dayNumber: updatedGame.dayNumber,
+        message: deaths.length === 0 ? 'No one died last night.' : undefined,
+      });
+
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('undo_night_action', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('night_action_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('night_action_error', { message: 'Only the Storyteller can undo night actions' });
+        return;
+      }
+
+      if (game.phase !== 'night') {
+        socket.emit('night_action_error', { message: 'Can only undo night actions during the night phase' });
+        return;
+      }
+
+      if (game.nightQueuePosition <= 0) {
+        socket.emit('night_action_error', { message: 'No night actions to undo' });
+        return;
+      }
+
+      const updatedGame = revertNightQueueStep(game);
+      store.games.set(game.id, updatedGame);
+
+      // Send the reverted prompt back to the Storyteller
+      const prompt = getNightPromptInfo(updatedGame);
+      if (prompt) {
+        socket.emit('night_prompt', prompt);
+      }
+
+      socket.emit('night_action_reverted', {
+        queuePosition: updatedGame.nightQueuePosition,
+      });
     });
 
     socket.on('disconnect', () => {
