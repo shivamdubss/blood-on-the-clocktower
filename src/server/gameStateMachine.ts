@@ -1,4 +1,5 @@
 import type { GameState, Player, Phase, RoleId } from '../types/game.js';
+import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
   return {
@@ -110,6 +111,26 @@ export function setStoryteller(state: GameState, storytellerId: string): GameSta
   return {
     ...state,
     storytellerId,
+  };
+}
+
+export function assignAllRoles(state: GameState): GameState {
+  const playerIds = state.players.map((p) => p.id);
+  const assignments = computeRoleAssignments(playerIds);
+
+  return {
+    ...state,
+    players: state.players.map((p) => {
+      const assignment = assignments.find((a) => a.playerId === p.id);
+      if (!assignment) return p;
+      const role = assignment.role;
+      return {
+        ...p,
+        trueRole: role,
+        apparentRole: role,
+        isDrunk: role === 'drunk',
+      };
+    }),
   };
 }
 

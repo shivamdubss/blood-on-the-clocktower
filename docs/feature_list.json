@@ -69,7 +69,7 @@
       "test:unit -- --grep 'role assignment'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ROLE-02",

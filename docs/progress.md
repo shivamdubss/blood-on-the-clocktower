@@ -1,12 +1,20 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 1 (Foundation) -- COMPLETE
-- **Features Completed:** 5 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02)
-- **Last Known Working State:** All tests passing (41 unit, 13 e2e)
-- **Last Session:** Session 4
+- **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
+- **Features Completed:** 6 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01)
+- **Last Known Working State:** All tests passing (49 unit, 13 e2e)
+- **Last Session:** Session 5
 
 ## Session Log
+
+### Session 5 -- ROLE-01
+- Implemented ROLE-01: Server assigns roles according to official Trouble Brewing distribution table
+- Created `src/server/roleDistribution.ts` with distribution table, `assignRoles()`, `getRoleType()`, and role pools
+- Added `assignAllRoles()` to `gameStateMachine.ts` -- assigns roles via state machine on game start
+- Wired role assignment into `start_game` socket handler (roles assigned before phase transition to setup)
+- 8 new unit tests in `roleDistribution.test.ts`: distribution table correctness for all counts (5-15), unique role assignment, type count validation, randomization
+- All 49 unit + 13 e2e tests passing
 
 ### Session 4 -- STATE-01 + STATE-02
 - Implemented STATE-01: verified all game state mutations go through gameStateMachine.ts

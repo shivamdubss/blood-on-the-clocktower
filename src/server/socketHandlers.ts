@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles } from './gameStateMachine.js';
 
 export interface GameStore {
   games: Map<string, GameState>;
@@ -91,7 +91,8 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         return;
       }
 
-      const updatedGame = transitionPhase(game, 'setup');
+      const withRoles = assignAllRoles(game);
+      const updatedGame = transitionPhase(withRoles, 'setup');
       store.games.set(game.id, updatedGame);
 
       io.to(game.id).emit('game_started', { gameId: game.id });
