@@ -772,6 +772,24 @@ export function commitNightActions(state: GameState): GameState {
   };
 }
 
+export function processMonkAction(state: GameState, targetPlayerId: string): GameState {
+  const target = state.players.find((p) => p.id === targetPlayerId);
+  if (!target) return state;
+
+  return {
+    ...state,
+    monkProtectedPlayerId: targetPlayerId,
+    gameLog: [
+      ...state.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'monk_action',
+        data: { targetPlayerId },
+      },
+    ],
+  };
+}
+
 export function processPoisonerAction(state: GameState, targetPlayerId: string): GameState {
   const target = state.players.find((p) => p.id === targetPlayerId);
   if (!target) return state;

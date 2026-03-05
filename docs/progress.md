@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 35 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER)
-- **Last Known Working State:** All tests passing (487 unit, 16 e2e)
-- **Last Session:** Session 33
+- **Features Completed:** 36 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK)
+- **Last Known Working State:** All tests passing (508 unit, 16 e2e)
+- **Last Session:** Session 34
 
 ## Session Log
+
+### Session 34 -- ABILITY-MONK
+- Implemented ABILITY-MONK: Monk chooses a player each night (not first) to protect from the Demon
+- Added `processMonkAction()` to `gameStateMachine.ts`: sets `monkProtectedPlayerId` on the game state
+- Updated `src/roles/monk.ts` ability handler: validates targetPlayerId, checks player exists/alive, prevents self-targeting, checks isPoisoned/isDrunk for isCorrupted flag
+- Wired Monk processing into `submit_night_action` socket handler: only applies protection if Monk is not poisoned
+- Infrastructure already in place: monk in NIGHT_OTHER_ORDER (not NIGHT_1_ORDER), `monkProtectedPlayerId` field in GameState, Monk protection check in `processImpAction`, `choose_player` prompt type
+- `monkProtectedPlayerId` is cleared at start of each night via `transitionToNight()`
+- When poisoned, Monk's protection is not applied (socket handler checks `isPoisoned` before calling `processMonkAction`)
+- 21 new tests in `monk.test.ts`: 3 night order tests, 1 night prompt test, 6 state machine tests (protection set, logging, invalid target, Imp blocked, unprotected player killed, cleared at night), 7 ability handler tests (success, no target, invalid target, dead target, self-target, poisoned, drunk), 4 WebSocket tests (protection set, Imp blocked, poisoned no effect, cleared at night transition)
+- All 508 unit + 16 e2e tests passing
+- Next feature: ABILITY-RAVENKEEPER
 
 ### Session 33 -- ABILITY-UNDERTAKER
 - Implemented ABILITY-UNDERTAKER: Undertaker learns the role of the executed player each night (after first)

@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processImpAction } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -665,6 +665,16 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
           const poisoner = processedGame.players.find((p) => p.id === currentEntry.playerId);
           if (poisoner && !poisoner.isPoisoned) {
             processedGame = processPoisonerAction(processedGame, input.targetPlayerId);
+          }
+        }
+      }
+
+      if (currentEntry.roleId === 'monk') {
+        const input = data.input as { targetPlayerId?: string } | undefined;
+        if (input?.targetPlayerId) {
+          const monkPlayer = processedGame.players.find((p) => p.id === currentEntry.playerId);
+          if (monkPlayer && !monkPlayer.isPoisoned) {
+            processedGame = processMonkAction(processedGame, input.targetPlayerId);
           }
         }
       }

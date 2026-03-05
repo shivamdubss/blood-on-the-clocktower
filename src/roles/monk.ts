@@ -11,6 +11,35 @@ export const metadata: RoleMetadata = {
   otherNights: true,
 };
 
-export const abilityHandler: AbilityHandler = (_context, _input) => {
-  return { success: true };
+export const abilityHandler: AbilityHandler = (context, input) => {
+  const { gameState, isPoisoned, isDrunk, player } = context;
+  const targetInput = input as { targetPlayerId?: string } | undefined;
+
+  if (!targetInput?.targetPlayerId) {
+    return { success: false, message: 'No target selected' };
+  }
+
+  const target = gameState.players.find((p) => p.id === targetInput.targetPlayerId);
+  if (!target) {
+    return { success: false, message: 'Target player not found' };
+  }
+
+  if (!target.isAlive) {
+    return { success: false, message: 'Target player is not alive' };
+  }
+
+  if (targetInput.targetPlayerId === player.id) {
+    return { success: false, message: 'Monk cannot protect themselves' };
+  }
+
+  const isCorrupted = isPoisoned || isDrunk;
+
+  return {
+    success: true,
+    data: {
+      targetPlayerId: targetInput.targetPlayerId,
+      effective: !isCorrupted,
+      isCorrupted,
+    },
+  };
 };
