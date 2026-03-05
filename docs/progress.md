@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 28 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02)
-- **Last Known Working State:** All tests passing (356 unit, 16 e2e)
-- **Last Session:** Session 26
+- **Features Completed:** 29 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN)
+- **Last Known Working State:** All tests passing (372 unit, 16 e2e)
+- **Last Session:** Session 27
 
 ## Session Log
+
+### Session 27 -- ABILITY-WASHERWOMAN
+- Marked ABILITY-WASHERWOMAN as passing: implementation was already complete from prior sessions (ability handler, night prompt, night_info delivery)
+- Washerwoman fires on Night 1 only (in NIGHT_1_ORDER, not NIGHT_OTHER_ORDER)
+- Storyteller prompted with choose_players_and_role prompt type to select 2 players and a Townsfolk role
+- Player receives night_info WebSocket event with player1Id, player1Name, player2Id, player2Name, revealedRole
+- When poisoned/drunk, isCorrupted flag is set to true; Storyteller manually provides false information
+- 16 new tests in `washerwoman.test.ts`: 2 night order tests, 1 night prompt test, 8 ability handler tests (success, validation, poisoned, drunk), 5 WebSocket tests (info delivery, poisoned info, isPoisoned flag, isDrunk flag)
+- All 372 unit + 16 e2e tests passing
+- Next feature: ABILITY-LIBRARIAN
 
 ### Session 26 -- EDGE-01 + EDGE-02
 - Marked EDGE-01 as passing: Poisoner timing tests already existed in `poisonerTiming.test.ts` (7 tests) covering all acceptance criteria (poison persists through Night N and Day N, expires at Night N+1, correctly computed for abilities after Poisoner in queue)
