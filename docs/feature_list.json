@@ -206,7 +206,7 @@
       "test:e2e -- --grep 'nominate'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "DAY-04",

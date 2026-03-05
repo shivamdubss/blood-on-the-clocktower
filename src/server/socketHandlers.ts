@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -264,6 +264,132 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       store.games.set(game.id, updatedGame);
 
       io.to(game.id).emit('discussion_ended', { dayNumber: updatedGame.dayNumber });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('open_nominations', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('nomination_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('nomination_error', { message: 'Only the Storyteller can open nominations' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'discussion') {
+        socket.emit('nomination_error', { message: 'Can only open nominations from discussion phase' });
+        return;
+      }
+
+      // Clear nominations from previous rounds and transition to nomination sub-phase
+      let updatedGame = clearNominations(game);
+      updatedGame = transitionDaySubPhase(updatedGame, 'nomination');
+      store.games.set(game.id, updatedGame);
+
+      io.to(game.id).emit('nominations_opened', { dayNumber: updatedGame.dayNumber });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('close_nominations', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('nomination_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('nomination_error', { message: 'Only the Storyteller can close nominations' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'nomination') {
+        socket.emit('nomination_error', { message: 'Can only close nominations during nomination phase' });
+        return;
+      }
+
+      const updatedGame = transitionDaySubPhase(game, 'end');
+      store.games.set(game.id, updatedGame);
+
+      io.to(game.id).emit('nominations_closed', { dayNumber: updatedGame.dayNumber });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('nominate', (data: { gameId: string; nomineeId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('nomination_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'nomination') {
+        socket.emit('nomination_error', { message: 'Nominations are not open' });
+        return;
+      }
+
+      // Find the nominator
+      const nominator = game.players.find((p) => p.id === socket.id);
+      if (!nominator) {
+        socket.emit('nomination_error', { message: 'You are not in this game' });
+        return;
+      }
+
+      // Dead players cannot nominate
+      if (!nominator.isAlive) {
+        socket.emit('nomination_error', { message: 'Dead players cannot nominate' });
+        return;
+      }
+
+      // Check if nominator has already nominated today
+      const hasNominated = game.nominations.some((n) => n.nominatorId === socket.id);
+      if (hasNominated) {
+        socket.emit('nomination_error', { message: 'You have already nominated today' });
+        return;
+      }
+
+      // Find the nominee
+      const nominee = game.players.find((p) => p.id === data.nomineeId);
+      if (!nominee) {
+        socket.emit('nomination_error', { message: 'Nominated player not found' });
+        return;
+      }
+
+      // Nominee must be alive
+      if (!nominee.isAlive) {
+        socket.emit('nomination_error', { message: 'Cannot nominate a dead player' });
+        return;
+      }
+
+      // Check if nominee has already been nominated today
+      const hasBeenNominated = game.nominations.some((n) => n.nomineeId === data.nomineeId);
+      if (hasBeenNominated) {
+        socket.emit('nomination_error', { message: 'That player has already been nominated today' });
+        return;
+      }
+
+      // Cannot nominate yourself
+      if (socket.id === data.nomineeId) {
+        socket.emit('nomination_error', { message: 'You cannot nominate yourself' });
+        return;
+      }
+
+      const updatedGame = addNomination(game, socket.id, data.nomineeId);
+      store.games.set(game.id, updatedGame);
+
+      const nominatorName = nominator.name;
+      const nomineeName = nominee.name;
+
+      io.to(game.id).emit('nomination_made', {
+        nominatorId: socket.id,
+        nominatorName,
+        nomineeId: data.nomineeId,
+        nomineeName,
+      });
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 

@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
-- **Features Completed:** 13 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02)
-- **Last Known Working State:** All tests passing (101 unit, 16 e2e)
-- **Last Session:** Session 12
+- **Features Completed:** 14 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03)
+- **Last Known Working State:** All tests passing (116 unit, 16 e2e)
+- **Last Session:** Session 13
 
 ## Session Log
+
+### Session 13 -- DAY-03
+- Implemented DAY-03: Nomination system with living player nominations
+- Fixed pre-existing TypeScript error in `discussionPhase.test.ts` (unknown type on `lastLog.data`)
+- Added `addNomination()` and `clearNominations()` to `gameStateMachine.ts`
+- Added `nominate` socket handler: validates living status, once-per-day nominator/nominee limits, nomination window open, no self-nomination
+- Added `open_nominations` socket handler: Storyteller-only, transitions from discussion to nomination, clears previous nominations
+- Added `close_nominations` socket handler: Storyteller-only, transitions from nomination to end sub-phase
+- Broadcasts `nomination_made`, `nominations_opened`, `nominations_closed` events to all clients
+- Nomination tracking derived from `nominations` array (no new Player fields needed)
+- 15 new unit tests in `nomination.test.ts`: state machine tests, WebSocket integration tests for all acceptance criteria
+- All 116 unit + 16 e2e tests passing
 
 ### Session 12 -- DAY-02
 - Implemented DAY-02: Discussion phase with Storyteller-controlled timing

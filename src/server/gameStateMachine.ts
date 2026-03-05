@@ -1,4 +1,4 @@
-import type { GameState, Player, Phase, DaySubPhase, RoleId } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination } from '../types/game.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
@@ -181,6 +181,31 @@ export function transitionDaySubPhase(state: GameState, subPhase: DaySubPhase): 
       ...state.gameLog,
       { timestamp: Date.now(), type: 'day_sub_phase_transition', data: { subPhase } },
     ],
+  };
+}
+
+export function addNomination(state: GameState, nominatorId: string, nomineeId: string): GameState {
+  const nomination: Nomination = {
+    nominatorId,
+    nomineeId,
+    votes: [],
+    voteCount: 0,
+    passed: false,
+  };
+  return {
+    ...state,
+    nominations: [...state.nominations, nomination],
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'nomination', data: { nominatorId, nomineeId } },
+    ],
+  };
+}
+
+export function clearNominations(state: GameState): GameState {
+  return {
+    ...state,
+    nominations: [],
   };
 }
 

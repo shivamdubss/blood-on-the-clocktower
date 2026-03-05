@@ -107,7 +107,7 @@ describe('discussion phase', () => {
     expect(result.gameLog.length).toBeGreaterThan(0);
     const lastLog = result.gameLog[result.gameLog.length - 1];
     expect(lastLog.type).toBe('day_sub_phase_transition');
-    expect(lastLog.data.subPhase).toBe('discussion');
+    expect((lastLog.data as { subPhase: string }).subPhase).toBe('discussion');
   });
 
   it('transitionDaySubPhase from discussion to nomination', () => {
