@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -601,6 +601,59 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
 
       io.to(game.id).emit('night_started', { dayNumber: game.dayNumber });
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+
+      // Send the first night prompt to the Storyteller
+      if (updatedGame.storytellerId) {
+        const prompt = getNightPromptInfo(updatedGame);
+        if (prompt) {
+          io.to(updatedGame.storytellerId).emit('night_prompt', prompt);
+        } else {
+          io.to(updatedGame.storytellerId).emit('night_queue_empty', {});
+        }
+      }
+    });
+
+    socket.on('submit_night_action', (data: { gameId: string; input?: unknown }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('night_action_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('night_action_error', { message: 'Only the Storyteller can submit night actions' });
+        return;
+      }
+
+      if (game.phase !== 'night') {
+        socket.emit('night_action_error', { message: 'Can only submit night actions during the night phase' });
+        return;
+      }
+
+      if (game.nightQueuePosition >= game.nightQueue.length) {
+        socket.emit('night_action_error', { message: 'Night queue is already complete' });
+        return;
+      }
+
+      const updatedGame = advanceNightQueue(game, data.input);
+      store.games.set(game.id, updatedGame);
+
+      // Send confirmation of the completed action
+      const completedEntry = game.nightQueue[game.nightQueuePosition];
+      socket.emit('night_action_confirmed', {
+        queuePosition: game.nightQueuePosition,
+        roleId: completedEntry.roleId,
+        playerId: completedEntry.playerId,
+      });
+
+      // Send the next prompt or signal queue completion
+      const nextPrompt = getNightPromptInfo(updatedGame);
+      if (nextPrompt) {
+        socket.emit('night_prompt', nextPrompt);
+      } else {
+        socket.emit('night_queue_empty', {});
+      }
     });
 
     socket.on('disconnect', () => {

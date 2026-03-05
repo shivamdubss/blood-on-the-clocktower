@@ -57,6 +57,21 @@ export interface NightQueueEntry {
   playerId: string;
   completed: boolean;
   result?: unknown;
+  storytellerInput?: unknown;
+}
+
+export interface NightPromptInfo {
+  queuePosition: number;
+  totalInQueue: number;
+  roleId: RoleId;
+  roleName: string;
+  ability: string;
+  playerId: string;
+  playerName: string;
+  isDrunk: boolean;
+  isPoisoned: boolean;
+  promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'info_only';
+  promptDescription: string;
 }
 
 export interface GameState {

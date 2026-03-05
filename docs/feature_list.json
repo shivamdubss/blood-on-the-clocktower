@@ -317,7 +317,7 @@
     "human_review": [
       "Verify night dashboard UI is clear and shows the right info per role"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "NIGHT-03",

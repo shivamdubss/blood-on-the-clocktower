@@ -1,7 +1,8 @@
-import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo } from '../types/game.js';
 import type { AbilityContext, AbilityResult } from '../types/ability.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 import { NIGHT_1_ORDER, NIGHT_OTHER_ORDER } from '../data/nightOrder.js';
+import { ROLE_MAP } from '../data/roles.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
   return {
@@ -444,6 +445,123 @@ export function buildAbilityContext(state: GameState, playerId: string, nightNum
     isPoisoned,
     isDrunk,
     nightNumber,
+  };
+}
+
+export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
+  const { nightQueue, nightQueuePosition } = state;
+  if (nightQueuePosition >= nightQueue.length) return null;
+
+  const entry = nightQueue[nightQueuePosition];
+  if (!entry || entry.completed) return null;
+
+  const player = state.players.find((p) => p.id === entry.playerId);
+  if (!player) return null;
+
+  const roleMeta = ROLE_MAP.get(entry.roleId);
+  if (!roleMeta) return null;
+
+  const promptType = getRolePromptType(entry.roleId);
+  const promptDescription = getRolePromptDescription(entry.roleId, player.name);
+
+  return {
+    queuePosition: nightQueuePosition,
+    totalInQueue: nightQueue.length,
+    roleId: entry.roleId,
+    roleName: roleMeta.name,
+    ability: roleMeta.ability,
+    playerId: player.id,
+    playerName: player.name,
+    isDrunk: player.isDrunk,
+    isPoisoned: player.isPoisoned,
+    promptType,
+    promptDescription,
+  };
+}
+
+function getRolePromptType(roleId: RoleId): NightPromptInfo['promptType'] {
+  switch (roleId) {
+    case 'poisoner':
+    case 'monk':
+    case 'butler':
+    case 'imp':
+      return 'choose_player';
+    case 'fortuneTeller':
+      return 'choose_two_players';
+    case 'chef':
+    case 'empath':
+      return 'provide_number';
+    case 'washerwoman':
+    case 'librarian':
+    case 'investigator':
+      return 'choose_players_and_role';
+    case 'spy':
+    case 'ravenkeeper':
+    case 'undertaker':
+    default:
+      return 'info_only';
+  }
+}
+
+function getRolePromptDescription(roleId: RoleId, playerName: string): string {
+  switch (roleId) {
+    case 'poisoner':
+      return `Choose a player for ${playerName} (Poisoner) to poison tonight.`;
+    case 'spy':
+      return `${playerName} (Spy) may see the Grimoire. Confirm to proceed.`;
+    case 'washerwoman':
+      return `Choose 2 players and a Townsfolk role to show ${playerName} (Washerwoman).`;
+    case 'librarian':
+      return `Choose 2 players and an Outsider role to show ${playerName} (Librarian), or indicate no Outsiders.`;
+    case 'investigator':
+      return `Choose 2 players and a Minion role to show ${playerName} (Investigator).`;
+    case 'chef':
+      return `Provide the number of evil pairs to show ${playerName} (Chef).`;
+    case 'empath':
+      return `Provide the number of evil alive neighbours to show ${playerName} (Empath).`;
+    case 'fortuneTeller':
+      return `${playerName} (Fortune Teller) chooses 2 players. Indicate if either is the Demon (or red herring).`;
+    case 'undertaker':
+      return `Show ${playerName} (Undertaker) the role of the player executed today, or indicate no execution.`;
+    case 'monk':
+      return `Choose a player for ${playerName} (Monk) to protect from the Demon tonight.`;
+    case 'imp':
+      return `Choose a player for ${playerName} (Imp) to kill tonight.`;
+    case 'ravenkeeper':
+      return `${playerName} (Ravenkeeper) chooses a player to learn their role. (Only if killed tonight.)`;
+    case 'butler':
+      return `Choose a player for ${playerName} (Butler) to select as their master.`;
+    default:
+      return `Resolve ${playerName}'s ability.`;
+  }
+}
+
+export function advanceNightQueue(state: GameState, storytellerInput?: unknown): GameState {
+  const { nightQueue, nightQueuePosition } = state;
+  if (nightQueuePosition >= nightQueue.length) return state;
+
+  const updatedQueue = nightQueue.map((entry, i) =>
+    i === nightQueuePosition
+      ? { ...entry, completed: true, storytellerInput }
+      : entry
+  );
+
+  return {
+    ...state,
+    nightQueue: updatedQueue,
+    nightQueuePosition: nightQueuePosition + 1,
+    gameLog: [
+      ...state.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'night_action_confirmed',
+        data: {
+          queuePosition: nightQueuePosition,
+          roleId: nightQueue[nightQueuePosition].roleId,
+          playerId: nightQueue[nightQueuePosition].playerId,
+        },
+      },
+    ],
   };
 }
 

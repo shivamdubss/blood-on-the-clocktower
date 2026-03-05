@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 4 (Night Phase Infrastructure + Ability Context)
-- **Features Completed:** 19 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01)
-- **Last Known Working State:** All tests passing (197 unit, 16 e2e)
-- **Last Session:** Session 18
+- **Features Completed:** 20 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02)
+- **Last Known Working State:** All tests passing (215 unit, 16 e2e)
+- **Last Session:** Session 19
 
 ## Session Log
+
+### Session 19 -- NIGHT-02
+- Implemented NIGHT-02: Storyteller night dashboard with sequential prompts for each role in the queue
+- Added `NightPromptInfo` type to `src/types/game.ts` with queuePosition, totalInQueue, roleId, roleName, ability, playerId, playerName, isDrunk, isPoisoned, promptType, promptDescription
+- Added `storytellerInput` field to `NightQueueEntry` type for storing Storyteller's per-step input
+- Added `getNightPromptInfo()` to `gameStateMachine.ts`: generates role-specific prompt with promptType (choose_player, choose_two_players, provide_number, choose_players_and_role, info_only) and descriptive text
+- Added `advanceNightQueue()` to `gameStateMachine.ts`: marks current entry completed, stores storytellerInput, increments position
+- Added `submit_night_action` socket handler: Storyteller-only, validates night phase, advances queue, emits `night_action_confirmed` + next `night_prompt` or `night_queue_empty`
+- Updated `end_day` socket handler to auto-send first `night_prompt` to Storyteller when night begins
+- 18 new unit tests in `nightDashboard.test.ts`: 10 state machine tests + 8 WebSocket integration tests
+- Human review: Verify night dashboard UI is clear and shows the right info per role
+- All 215 unit + 16 e2e tests passing
 
 ### Session 18 -- NIGHT-01
 - Implemented NIGHT-01: Night order as static data with runtime queue generation
