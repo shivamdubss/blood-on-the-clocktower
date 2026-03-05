@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -512,6 +512,64 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         threshold: Math.ceil(resolved.players.filter((p) => p.isAlive).length / 2),
       });
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(resolved));
+    });
+
+    socket.on('resolve_execution', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('execution_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('execution_error', { message: 'Only the Storyteller can resolve execution' });
+        return;
+      }
+
+      if (game.phase !== 'day') {
+        socket.emit('execution_error', { message: 'Can only resolve execution during the day phase' });
+        return;
+      }
+
+      // Resolve the execution based on nomination results
+      let updatedGame = resolveExecution(game);
+
+      // Transition to execution sub-phase to announce result
+      if (updatedGame.phase !== 'ended') {
+        updatedGame = { ...updatedGame, daySubPhase: 'execution' as const };
+      }
+
+      store.games.set(game.id, updatedGame);
+
+      const executedPlayer = updatedGame.executedPlayerId
+        ? updatedGame.players.find((p) => p.id === updatedGame.executedPlayerId)
+        : null;
+
+      io.to(game.id).emit('execution_result', {
+        executed: executedPlayer
+          ? { playerId: executedPlayer.id, playerName: executedPlayer.name }
+          : null,
+        reason: updatedGame.executedPlayerId === null
+          ? (updatedGame.gameLog[updatedGame.gameLog.length - 1]?.type === 'execution_tie' ? 'tie' : 'no_passing_nominations')
+          : 'executed',
+      });
+
+      // If the game ended, send the final state with all roles revealed
+      if (updatedGame.phase === 'ended') {
+        io.to(game.id).emit('game_over', {
+          winner: updatedGame.winner,
+          players: updatedGame.players.map((p) => ({
+            playerId: p.id,
+            playerName: p.name,
+            trueRole: p.trueRole,
+            isAlive: p.isAlive,
+          })),
+        });
+        io.to(game.id).emit('game_state', updatedGame);
+      } else {
+        io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+      }
     });
 
     socket.on('disconnect', () => {

@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
-- **Features Completed:** 15 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04)
-- **Last Known Working State:** All tests passing (136 unit, 16 e2e)
-- **Last Session:** Session 14
+- **Features Completed:** 16 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05)
+- **Last Known Working State:** All tests passing (155 unit, 16 e2e)
+- **Last Session:** Session 15
 
 ## Session Log
+
+### Session 15 -- DAY-05
+- Implemented DAY-05: Execution resolution -- highest passing vote count triggers execution
+- Added `resolveExecution()` to `gameStateMachine.ts`: finds highest passing nomination, handles ties (no execution), kills executed player, sets `executedPlayerId`
+- Win condition checks integrated into execution: Saint execution triggers Evil win (unless poisoned), Demon execution triggers Good win
+- Scarlet Woman trigger: if Demon executed with 5+ alive and unpoisoned SW, SW becomes new Imp and game continues
+- General win condition check runs after execution (e.g., Evil wins if ≤2 players remain)
+- Added `resolve_execution` socket handler: Storyteller-only, resolves execution, broadcasts `execution_result` to all clients
+- `execution_result` event includes `executed` (player info or null) and `reason` ('executed', 'tie', 'no_passing_nominations')
+- On game end, broadcasts `game_over` event with winner and all players' true roles revealed
+- 19 new unit tests in `execution.test.ts`: 12 state machine tests + 7 WebSocket integration tests
+- All 155 unit + 16 e2e tests passing
 
 ### Session 14 -- DAY-04
 - Implemented DAY-04: Voting system with simultaneous public voting on nominations

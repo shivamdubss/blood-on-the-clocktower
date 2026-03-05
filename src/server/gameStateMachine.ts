@@ -291,6 +291,91 @@ export function resolveVote(state: GameState, nominationIndex: number): GameStat
   };
 }
 
+export function resolveExecution(state: GameState): GameState {
+  // Find all passing nominations
+  const passingNominations = state.nominations.filter((n) => n.passed);
+
+  if (passingNominations.length === 0) {
+    // No nominations passed -- no execution
+    return {
+      ...state,
+      executedPlayerId: null,
+      gameLog: [
+        ...state.gameLog,
+        { timestamp: Date.now(), type: 'no_execution', data: {} },
+      ],
+    };
+  }
+
+  // Find highest vote count among passing nominations
+  const maxVoteCount = Math.max(...passingNominations.map((n) => n.voteCount));
+  const topNominations = passingNominations.filter((n) => n.voteCount === maxVoteCount);
+
+  if (topNominations.length > 1) {
+    // Tie -- no execution
+    return {
+      ...state,
+      executedPlayerId: null,
+      gameLog: [
+        ...state.gameLog,
+        { timestamp: Date.now(), type: 'execution_tie', data: { voteCount: maxVoteCount } },
+      ],
+    };
+  }
+
+  // Execute the player with the highest passing vote count
+  const executedNomination = topNominations[0];
+  const executedPlayerId = executedNomination.nomineeId;
+  const executedPlayer = state.players.find((p) => p.id === executedPlayerId);
+
+  let newState = killPlayer(state, executedPlayerId);
+  newState = {
+    ...newState,
+    executedPlayerId,
+    gameLog: [
+      ...newState.gameLog,
+      { timestamp: Date.now(), type: 'execution', data: { playerId: executedPlayerId, voteCount: maxVoteCount } },
+    ],
+  };
+
+  // Check win conditions: Saint executed (Good loses), Demon executed (Good wins)
+  if (executedPlayer) {
+    // Saint execution: if Saint is not poisoned, Good loses immediately
+    if (executedPlayer.trueRole === 'saint' && !executedPlayer.isPoisoned) {
+      return { ...newState, winner: 'evil', phase: 'ended' };
+    }
+
+    // Demon execution: Good wins (Scarlet Woman trigger will be handled in a later feature)
+    if (executedPlayer.trueRole === 'imp') {
+      // Check for Scarlet Woman trigger: 5+ alive (before death), SW alive and not poisoned
+      const aliveBeforeDeath = state.players.filter((p) => p.isAlive).length;
+      const scarletWoman = state.players.find(
+        (p) => p.trueRole === 'scarletWoman' && p.isAlive && !p.isPoisoned
+      );
+      if (scarletWoman && aliveBeforeDeath >= 5) {
+        // Scarlet Woman becomes the new Imp -- game continues
+        newState = {
+          ...newState,
+          players: newState.players.map((p) =>
+            p.id === scarletWoman.id ? { ...p, trueRole: 'imp' as const } : p
+          ),
+          gameLog: [
+            ...newState.gameLog,
+            { timestamp: Date.now(), type: 'scarlet_woman_trigger', data: { playerId: scarletWoman.id } },
+          ],
+        };
+        return newState;
+      }
+      return { ...newState, winner: 'good', phase: 'ended' };
+    }
+  }
+
+  // Run general win condition checks (e.g., 2 players left)
+  newState = checkWinConditions(newState);
+
+  return newState;
+}
+
 export function applyStorytellOverride(
   state: GameState,
   override: Partial<GameState>
