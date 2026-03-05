@@ -403,8 +403,13 @@ export function generateNightQueue(state: GameState): NightQueueEntry[] {
 
 export function transitionToNight(state: GameState): GameState {
   const nightQueue = generateNightQueue(state);
+  // Clear all poison at the start of each night — Poisoner will re-apply if alive
+  const playersWithPoisonCleared = state.players.map((p) =>
+    p.isPoisoned ? { ...p, isPoisoned: false } : p
+  );
   return {
     ...state,
+    players: playersWithPoisonCleared,
     phase: 'night' as Phase,
     daySubPhase: null,
     nominations: [],
@@ -412,6 +417,7 @@ export function transitionToNight(state: GameState): GameState {
     executedPlayerId: null,
     nightQueue,
     nightQueuePosition: 0,
+    monkProtectedPlayerId: null,
     gameLog: [
       ...state.gameLog,
       { timestamp: Date.now(), type: 'phase_transition', data: { phase: 'night' } },

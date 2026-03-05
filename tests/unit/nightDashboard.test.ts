@@ -87,14 +87,17 @@ describe('night dashboard', () => {
     it('getNightPromptInfo shows isPoisoned flag for poisoned players', () => {
       let state = createInitialGameState('g1', 'ABC123', 'st1');
       const players = makePlayers(7);
-      players[2].isPoisoned = true; // Washerwoman is poisoned
       state = { ...state, players };
       state = transitionToNight(state);
 
-      // Find the washerwoman entry
+      // Set isPoisoned AFTER transitionToNight (which clears poison),
+      // simulating the Poisoner having already acted in the queue
       const washEntry = state.nightQueue.find(e => e.roleId === 'washerwoman');
       if (washEntry) {
-        state = { ...state, nightQueuePosition: state.nightQueue.indexOf(washEntry) };
+        const poisonedPlayers = state.players.map(p =>
+          p.id === washEntry.playerId ? { ...p, isPoisoned: true } : p
+        );
+        state = { ...state, players: poisonedPlayers, nightQueuePosition: state.nightQueue.indexOf(washEntry) };
         const prompt = getNightPromptInfo(state);
         expect(prompt).not.toBeNull();
         expect(prompt!.isPoisoned).toBe(true);

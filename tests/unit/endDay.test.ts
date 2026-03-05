@@ -265,16 +265,18 @@ describe('end day', () => {
       store.games.set(gameId, state);
 
       const storyteller = createClient();
-      const player1 = createClient();
-
       await new Promise<void>((resolve) => storyteller.on('connect', resolve));
+
+      // Join storyteller and wait for confirmation
+      storyteller.emit('join_game', { joinCode: 'ABC123', playerName: 'ST' });
+      await waitForEvent(storyteller, 'game_joined');
+
+      const player1 = createClient();
       await new Promise<void>((resolve) => player1.on('connect', resolve));
 
-      // Join both to the room
-      storyteller.emit('join_game', { joinCode: 'ABC123', playerName: 'ST' });
-      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+      // Join player1 and wait for confirmation
       player1.emit('join_game', { joinCode: 'ABC123', playerName: 'P1' });
-      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+      await waitForEvent(player1, 'game_joined');
 
       // Override state to day/end
       const g = store.games.get(gameId)!;
