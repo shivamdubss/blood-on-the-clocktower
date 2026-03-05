@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller } from './gameStateMachine.js';
 
 export interface GameStore {
   games: Map<string, GameState>;
@@ -43,7 +43,7 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       // If hostSecret matches, claim storyteller role
       let currentGame = game;
       if (hostSecret && game.hostSecret && hostSecret === game.hostSecret) {
-        currentGame = { ...game, storytellerId: socket.id };
+        currentGame = setStoryteller(game, socket.id);
       }
 
       const player: Player = {

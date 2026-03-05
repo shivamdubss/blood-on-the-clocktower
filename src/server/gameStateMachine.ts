@@ -106,6 +106,13 @@ export function checkWinConditions(state: GameState): GameState {
   return state;
 }
 
+export function setStoryteller(state: GameState, storytellerId: string): GameState {
+  return {
+    ...state,
+    storytellerId,
+  };
+}
+
 export function applyStorytellOverride(
   state: GameState,
   override: Partial<GameState>

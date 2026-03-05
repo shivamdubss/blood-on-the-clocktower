@@ -2,11 +2,18 @@
 
 ## Current State
 - **Current Milestone:** Milestone 1 (Foundation)
-- **Features Completed:** 3 / 52 (LOBBY-01, LOBBY-02, LOBBY-03)
-- **Last Known Working State:** All tests passing (26 unit, 13 e2e)
-- **Last Session:** Session 3
+- **Features Completed:** 4 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01)
+- **Last Known Working State:** All tests passing (37 unit, 13 e2e)
+- **Last Session:** Session 4
 
 ## Session Log
+
+### Session 4 -- STATE-01
+- Implemented STATE-01: verified all game state mutations go through gameStateMachine.ts
+- Fixed direct state mutation in socketHandlers.ts (storytellerId was set via spread instead of state machine function)
+- Added `setStoryteller()` function to gameStateMachine.ts
+- Wrote 11 unit tests in `stateMachine.test.ts`: immutability, purity, client read-only verification, source-code analysis confirming no direct mutations in socket handlers
+- Human review: Audit codebase to confirm no client-side state mutations exist
 
 ### Session 3 -- LOBBY-03
 - Implemented `start_game` socket handler: validates player count (5-15), host-only restriction, transitions phase to `setup`
