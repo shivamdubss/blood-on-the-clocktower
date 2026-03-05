@@ -2,11 +2,20 @@
 
 ## Current State
 - **Current Milestone:** Milestone 7 (Outsider Abilities + Edge Cases)
-- **Features Completed:** 43 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR, ABILITY-BUTLER, ABILITY-RECLUSE, ABILITY-SAINT)
+- **Features Completed:** 44 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR, ABILITY-BUTLER, ABILITY-RECLUSE, ABILITY-SAINT, EDGE-03)
 - **Last Known Working State:** All tests passing (626 unit, 16 e2e)
-- **Last Session:** Session 40
+- **Last Session:** Session 41
 
 ## Session Log
+
+### Session 41 -- EDGE-03
+- Marked EDGE-03 as passing: Virgin + Drunk nominator edge case
+- Implementation was already complete: `processVirginNomination()` in `gameStateMachine.ts` (line 256) uses `nominator.apparentRole` via `getRoleType()` to check if nominator is Townsfolk
+- Drunk's `apparentRole` is always a Townsfolk (set during SETUP-02), so Drunk nominating Virgin correctly triggers the ability
+- Existing tests in `virgin.test.ts` already cover all 3 acceptance criteria: state machine test (line 136: "Drunk nominator counts as Townsfolk"), WebSocket test (line 432: "Drunk nominating Virgin triggers execution"), and both verify the Drunk is executed as a result
+- All 626 unit + 16 e2e tests passing
+- MILESTONE 7 COMPLETE
+- Next milestone: Milestone 8 (Win Conditions + Grimoire + UI + Full Game): WIN-01, ST-02, UI-01, UI-02, E2E-01
 
 ### Session 40 -- ABILITY-SAINT
 - Marked ABILITY-SAINT as passing: Saint execution triggers Good loss (Evil wins)
