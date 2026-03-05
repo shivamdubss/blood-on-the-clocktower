@@ -10,6 +10,7 @@ import {
   resolveVote,
   resolveExecution,
   killPlayer,
+  checkMayorWin,
 } from '../../src/server/gameStateMachine.js';
 import { registerSocketHandlers, type GameStore } from '../../src/server/socketHandlers.js';
 import type { GameState, Player } from '../../src/types/game.js';
@@ -273,6 +274,75 @@ describe('execution', () => {
     });
   });
 
+  // --- Mayor win condition tests ---
+
+  describe('Mayor win condition', () => {
+    it('Mayor win: 3 players alive, no execution, Mayor alive → Good wins', () => {
+      let state = createInitialGameState('g1', 'ABC', 'st1');
+      const players = makePlayers(5);
+      players[0].trueRole = 'mayor';
+      players[3].isAlive = false;
+      players[4].isAlive = false;
+      state = { ...state, players, phase: 'day', daySubPhase: 'end', executedPlayerId: null };
+
+      const result = checkMayorWin(state);
+      expect(result.winner).toBe('good');
+      expect(result.phase).toBe('ended');
+    });
+
+    it('Mayor win: Mayor is poisoned → no win', () => {
+      let state = createInitialGameState('g1', 'ABC', 'st1');
+      const players = makePlayers(5);
+      players[0].trueRole = 'mayor';
+      players[0].isPoisoned = true;
+      players[3].isAlive = false;
+      players[4].isAlive = false;
+      state = { ...state, players, phase: 'day', daySubPhase: 'end', executedPlayerId: null };
+
+      const result = checkMayorWin(state);
+      expect(result.winner).toBeNull();
+      expect(result.phase).toBe('day');
+    });
+
+    it('Mayor win: execution occurred → no win', () => {
+      let state = createInitialGameState('g1', 'ABC', 'st1');
+      const players = makePlayers(5);
+      players[0].trueRole = 'mayor';
+      players[3].isAlive = false;
+      players[4].isAlive = false;
+      state = { ...state, players, phase: 'day', daySubPhase: 'execution', executedPlayerId: 'p3' };
+
+      const result = checkMayorWin(state);
+      expect(result.winner).toBeNull();
+      expect(result.phase).toBe('day');
+    });
+
+    it('Mayor win: 4 players alive → no win', () => {
+      let state = createInitialGameState('g1', 'ABC', 'st1');
+      const players = makePlayers(5);
+      players[0].trueRole = 'mayor';
+      players[4].isAlive = false;
+      state = { ...state, players, phase: 'day', daySubPhase: 'end', executedPlayerId: null };
+
+      const result = checkMayorWin(state);
+      expect(result.winner).toBeNull();
+      expect(result.phase).toBe('day');
+    });
+
+    it('Mayor win: no Mayor alive → no win', () => {
+      let state = createInitialGameState('g1', 'ABC', 'st1');
+      const players = makePlayers(5);
+      // All players are washerwoman (default), no mayor
+      players[3].isAlive = false;
+      players[4].isAlive = false;
+      state = { ...state, players, phase: 'day', daySubPhase: 'end', executedPlayerId: null };
+
+      const result = checkMayorWin(state);
+      expect(result.winner).toBeNull();
+      expect(result.phase).toBe('day');
+    });
+  });
+
   // --- WebSocket integration tests ---
 
   describe('WebSocket', () => {
@@ -514,6 +584,34 @@ describe('execution', () => {
       const gameOver = (await gameOverPromise) as { winner: string };
 
       expect(gameOver.winner).toBe('evil');
+    });
+
+    it('end_day with Mayor win condition triggers game_over with Good win', async () => {
+      const { host, players, gameId } = await setupGameInNomination(7);
+
+      // Set up game state: 3 alive players, one is Mayor, no execution
+      const game = store.games.get(gameId)!;
+      store.games.set(gameId, {
+        ...game,
+        players: game.players.map((p, i) => ({
+          ...p,
+          trueRole: i === 0 ? ('mayor' as const) : p.trueRole,
+          isAlive: i < 3, // only first 3 players alive
+        })),
+        executedPlayerId: null,
+        daySubPhase: 'end' as const,
+      });
+
+      // Close nominations so end_day is allowed
+      host.emit('close_nominations', { gameId });
+      await new Promise<void>((r) => setTimeout(r, 50));
+
+      const gameOverPromise = waitForEvent(host, 'game_over');
+      host.emit('end_day', { gameId });
+      const gameOver = (await gameOverPromise) as { winner: string; players: { trueRole: string }[] };
+
+      expect(gameOver.winner).toBe('good');
+      expect(gameOver.players.length).toBeGreaterThan(0);
     });
   });
 });

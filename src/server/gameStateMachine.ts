@@ -112,6 +112,15 @@ export function checkWinConditions(state: GameState): GameState {
   return state;
 }
 
+export function checkMayorWin(state: GameState): GameState {
+  if (state.executedPlayerId !== null) return state;
+  const alivePlayers = state.players.filter((p) => p.isAlive);
+  if (alivePlayers.length !== 3) return state;
+  const mayor = alivePlayers.find((p) => p.trueRole === 'mayor');
+  if (!mayor || mayor.isPoisoned) return state;
+  return { ...state, winner: 'good', phase: 'ended' };
+}
+
 export function setStoryteller(state: GameState, storytellerId: string): GameState {
   return {
     ...state,

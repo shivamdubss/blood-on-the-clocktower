@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processImpAction } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processImpAction } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -594,6 +594,23 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       // End Day is only available after nominations are closed (daySubPhase === 'end' or 'execution')
       if (game.daySubPhase !== 'end' && game.daySubPhase !== 'execution') {
         socket.emit('end_day_error', { message: 'Must close nominations before ending the day' });
+        return;
+      }
+
+      // Check Mayor win before transitioning (transitionToNight clears executedPlayerId)
+      const mayorCheck = checkMayorWin(game);
+      if (mayorCheck.phase === 'ended') {
+        store.games.set(game.id, mayorCheck);
+        io.to(game.id).emit('game_over', {
+          winner: mayorCheck.winner,
+          players: mayorCheck.players.map((p) => ({
+            playerId: p.id,
+            playerName: p.name,
+            trueRole: p.trueRole,
+            isAlive: p.isAlive,
+          })),
+        });
+        io.to(game.id).emit('game_state', mayorCheck);
         return;
       }
 
