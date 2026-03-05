@@ -136,6 +136,22 @@ describe('Poisoner timing (EDGE-01)', () => {
     expect(chefContext.isPoisoned).toBe(false);
   });
 
+  it('poison expiry: poison from Night N is cleared at the start of Night N+1', () => {
+    let state = makeGameWithPlayers();
+    // Night 1: Poison p3
+    state = processPoisonerAction(state, 'p3');
+    expect(state.players.find((p) => p.id === 'p3')!.isPoisoned).toBe(true);
+
+    // Day 1
+    state = { ...state, phase: 'day' as const, daySubPhase: 'end' as const, dayNumber: 1 };
+    // Still poisoned during day
+    expect(state.players.find((p) => p.id === 'p3')!.isPoisoned).toBe(true);
+
+    // Night 2: poison expires
+    state = transitionToNight(state);
+    expect(state.players.find((p) => p.id === 'p3')!.isPoisoned).toBe(false);
+  });
+
   it('multiple night transitions: poison is fresh each night', () => {
     let state = makeGameWithPlayers();
 
