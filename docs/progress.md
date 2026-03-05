@@ -2,11 +2,22 @@
 
 ## Current State
 - **Current Milestone:** Milestone 5 (Evil Team Abilities + Poisoner/Drunk System)
-- **Features Completed:** 23 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER)
-- **Last Known Working State:** All tests passing (277 unit, 16 e2e)
-- **Last Session:** Session 22
+- **Features Completed:** 24 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP)
+- **Last Known Working State:** All tests passing (314 unit, 16 e2e)
+- **Last Session:** Session 23
 
 ## Session Log
+
+### Session 23 -- ABILITY-IMP
+- Implemented ABILITY-IMP: Imp night kill with star-pass, Monk/Soldier protection, poisoned check
+- Added `processImpAction()` to `gameStateMachine.ts`: handles normal kills (adds to pendingDeaths), star-pass (Imp dies, chosen Minion becomes new Imp), Monk protection (monkProtectedPlayerId blocks kill), Soldier protection (blocks kill if Soldier not poisoned)
+- Updated `src/roles/imp.ts` ability handler: validates target (alive, exists), checks isPoisoned (no effect), detects self-target as star-pass, returns structured result data
+- Wired Imp processing into `submit_night_action` socket handler (after Poisoner block): checks Imp poisoned status before calling processImpAction
+- Imp already in NIGHT_OTHER_ORDER (not NIGHT_1_ORDER), fires every night except Night 1
+- Star-pass does NOT trigger Scarlet Woman (only uses imp_star_pass log type, not a regular demon death)
+- Star-pass updates Grimoire (trueRole of new Imp reflects in players array)
+- 22 new tests in `tests/unit/imp.test.ts`: 11 state machine tests (kill, Monk block, Soldier block, poisoned Soldier, star-pass, star-pass auto-pick, star-pass no SW trigger, dead target, night queue presence) + 6 ability handler tests (valid kill, no target, invalid target, dead target, poisoned Imp, star-pass data) + 5 WebSocket tests (kill → pendingDeaths, Monk blocks via WS, poisoned no-op, star-pass via WS, dawn announcement integration)
+- All 314 unit + 16 e2e tests passing
 
 ### Session 22 -- ABILITY-POISONER
 - Implemented ABILITY-POISONER: Poisoner night ability with full AbilityContext integration
