@@ -1,12 +1,23 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- COMPLETE
-- **Features Completed:** 11 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04)
-- **Last Known Working State:** All tests passing (80 unit, 16 e2e)
-- **Last Session:** Session 10
+- **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
+- **Features Completed:** 12 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01)
+- **Last Known Working State:** All tests passing (90 unit, 16 e2e)
+- **Last Session:** Session 11
 
 ## Session Log
+
+### Session 11 -- DAY-01
+- Implemented DAY-01: Dawn announcement -- deaths from the previous night are announced
+- Added `addPendingDeath()` and `resolveDawnDeaths()` to `gameStateMachine.ts`
+- `resolveDawnDeaths()` kills all pending death players, clears pendingDeaths, transitions to day/dawn phase, increments dayNumber
+- Added `transition_to_day` socket handler: Storyteller-only, validates phase is night or setup
+- Broadcasts `dawn_announcement` event to all clients with deaths by player name (not role)
+- If no deaths, announcement includes a "No one died last night." message
+- Broadcasts sanitized game_state with dead players marked
+- 10 new unit tests in `dawnAnnouncement.test.ts`: state machine unit tests (addPendingDeath, resolveDawnDeaths), WebSocket integration tests (death announcement, simultaneous broadcast, dead marking, no-deaths message, auth checks)
+- All 90 unit + 16 e2e tests passing
 
 ### Session 10 -- SETUP-04
 - Implemented SETUP-04: Minion and Demon info exchange on Night 1

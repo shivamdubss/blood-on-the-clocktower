@@ -1,4 +1,4 @@
-import type { GameState, Player, Phase, RoleId } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId } from '../types/game.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
@@ -149,6 +149,28 @@ export function assignAllRoles(state: GameState): GameState {
   }
 
   return newState;
+}
+
+export function addPendingDeath(state: GameState, playerId: string): GameState {
+  if (state.pendingDeaths.includes(playerId)) return state;
+  return {
+    ...state,
+    pendingDeaths: [...state.pendingDeaths, playerId],
+  };
+}
+
+export function resolveDawnDeaths(state: GameState): GameState {
+  let newState = { ...state };
+  for (const playerId of state.pendingDeaths) {
+    newState = killPlayer(newState, playerId);
+  }
+  return {
+    ...newState,
+    pendingDeaths: [],
+    phase: 'day' as Phase,
+    daySubPhase: 'dawn' as DaySubPhase,
+    dayNumber: state.dayNumber + 1,
+  };
 }
 
 export function applyStorytellOverride(

@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -178,6 +178,42 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       }
 
       // Broadcast sanitized game state (no role info leaked to players)
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('transition_to_day', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('transition_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('transition_error', { message: 'Only the Storyteller can transition phases' });
+        return;
+      }
+
+      if (game.phase !== 'night' && game.phase !== 'setup') {
+        socket.emit('transition_error', { message: 'Can only transition to day from night or setup phase' });
+        return;
+      }
+
+      const updatedGame = resolveDawnDeaths(game);
+      store.games.set(game.id, updatedGame);
+
+      // Build dawn announcement: deaths by player name (not role)
+      const deaths = game.pendingDeaths.map((pid) => {
+        const player = game.players.find((p) => p.id === pid);
+        return { playerId: pid, playerName: player?.name ?? 'Unknown' };
+      });
+
+      io.to(game.id).emit('dawn_announcement', {
+        deaths,
+        dayNumber: updatedGame.dayNumber,
+        message: deaths.length === 0 ? 'No one died last night.' : undefined,
+      });
+
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 
