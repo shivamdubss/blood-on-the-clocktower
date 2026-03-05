@@ -173,6 +173,17 @@ export function resolveDawnDeaths(state: GameState): GameState {
   };
 }
 
+export function transitionDaySubPhase(state: GameState, subPhase: DaySubPhase): GameState {
+  return {
+    ...state,
+    daySubPhase: subPhase,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'day_sub_phase_transition', data: { subPhase } },
+    ],
+  };
+}
+
 export function applyStorytellOverride(
   state: GameState,
   override: Partial<GameState>

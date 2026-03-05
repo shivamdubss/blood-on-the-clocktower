@@ -2,11 +2,20 @@
 
 ## Current State
 - **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
-- **Features Completed:** 12 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01)
-- **Last Known Working State:** All tests passing (90 unit, 16 e2e)
-- **Last Session:** Session 11
+- **Features Completed:** 13 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02)
+- **Last Known Working State:** All tests passing (101 unit, 16 e2e)
+- **Last Session:** Session 12
 
 ## Session Log
+
+### Session 12 -- DAY-02
+- Implemented DAY-02: Discussion phase with Storyteller-controlled timing
+- Added `transitionDaySubPhase()` to `gameStateMachine.ts` for changing daySubPhase with game log entry
+- Added `start_discussion` socket handler: Storyteller-only, validates phase is day/dawn, transitions to discussion
+- Added `end_discussion` socket handler: Storyteller-only, validates phase is day/discussion, transitions to nomination
+- Both handlers broadcast `discussion_started`/`discussion_ended` events and updated `game_state` to all clients
+- 11 new unit tests in `discussionPhase.test.ts`: state machine tests, WebSocket integration tests (start/end discussion, auth checks, phase validation, simultaneous broadcast)
+- All 101 unit + 16 e2e tests passing
 
 ### Session 11 -- DAY-01
 - Implemented DAY-01: Dawn announcement -- deaths from the previous night are announced

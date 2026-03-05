@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -214,6 +214,56 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         message: deaths.length === 0 ? 'No one died last night.' : undefined,
       });
 
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('start_discussion', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('discussion_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('discussion_error', { message: 'Only the Storyteller can start discussion' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'dawn') {
+        socket.emit('discussion_error', { message: 'Can only start discussion from dawn phase' });
+        return;
+      }
+
+      const updatedGame = transitionDaySubPhase(game, 'discussion');
+      store.games.set(game.id, updatedGame);
+
+      io.to(game.id).emit('discussion_started', { dayNumber: updatedGame.dayNumber });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('end_discussion', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('discussion_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('discussion_error', { message: 'Only the Storyteller can end discussion' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'discussion') {
+        socket.emit('discussion_error', { message: 'Can only end discussion during discussion phase' });
+        return;
+      }
+
+      const updatedGame = transitionDaySubPhase(game, 'nomination');
+      store.games.set(game.id, updatedGame);
+
+      io.to(game.id).emit('discussion_ended', { dayNumber: updatedGame.dayNumber });
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 
