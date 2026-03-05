@@ -103,7 +103,7 @@
       "test:unit -- --grep 'Baron setup'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "SETUP-02",

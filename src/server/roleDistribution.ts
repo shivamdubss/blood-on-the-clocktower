@@ -46,6 +46,20 @@ export interface RoleAssignment {
 }
 
 /**
+ * Applies Baron adjustment: if Baron is among the selected minions,
+ * shift 2 Townsfolk slots to Outsider slots.
+ */
+export function applyBaronAdjustment(dist: Record<RoleType, number>, minions: RoleId[]): Record<RoleType, number> {
+  if (!minions.includes('baron')) return dist;
+  const outsiderSlots = Math.min(dist.townsfolk, 2);
+  return {
+    ...dist,
+    townsfolk: dist.townsfolk - outsiderSlots,
+    outsider: dist.outsider + outsiderSlots,
+  };
+}
+
+/**
  * Assigns roles to players according to the Trouble Brewing distribution table.
  * Returns an array of { playerId, role } assignments.
  */
@@ -56,10 +70,15 @@ export function assignRoles(playerIds: string[], playerCount?: number): RoleAssi
     throw new Error(`No distribution defined for ${count} players`);
   }
 
-  const townsfolk = shuffle(TOWNSFOLK_ROLES).slice(0, dist.townsfolk);
-  const outsiders = shuffle(OUTSIDER_ROLES).slice(0, dist.outsider);
+  // Pick minions and demons first to check for Baron
   const minions = shuffle(MINION_ROLES).slice(0, dist.minion);
   const demons = shuffle(DEMON_ROLES).slice(0, dist.demon);
+
+  // Apply Baron adjustment before selecting townsfolk/outsiders
+  const adjustedDist = applyBaronAdjustment(dist, minions);
+
+  const townsfolk = shuffle(TOWNSFOLK_ROLES).slice(0, adjustedDist.townsfolk);
+  const outsiders = shuffle(OUTSIDER_ROLES).slice(0, adjustedDist.outsider);
 
   const allRoles = shuffle([...townsfolk, ...outsiders, ...minions, ...demons]);
 

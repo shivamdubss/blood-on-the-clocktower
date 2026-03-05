@@ -2,11 +2,19 @@
 
 ## Current State
 - **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
-- **Features Completed:** 7 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02)
-- **Last Known Working State:** All tests passing (54 unit, 16 e2e)
-- **Last Session:** Session 6
+- **Features Completed:** 8 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01)
+- **Last Known Working State:** All tests passing (61 unit, 16 e2e)
+- **Last Session:** Session 7
 
 ## Session Log
+
+### Session 7 -- SETUP-01
+- Implemented SETUP-01: Baron adjustment adds 2 Outsiders (replaces 2 Townsfolk)
+- Added `applyBaronAdjustment()` to `roleDistribution.ts` -- exported for testing
+- Modified `assignRoles()` to pick minions first, then apply Baron adjustment before selecting townsfolk/outsiders
+- Updated existing `roleDistribution.test.ts` to account for Baron-adjusted type counts
+- 7 new unit tests in `baronAdjustment.test.ts`: adjustment correctness, total preservation, integration with assignRoles, no-Baron passthrough
+- All 61 unit + 16 e2e tests passing
 
 ### Session 6 -- ROLE-02
 - Implemented ROLE-02: Players receive their private role card after assignment

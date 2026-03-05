@@ -58,7 +58,7 @@ describe('role distribution', () => {
     }
   });
 
-  it('Townsfolk, Outsider, Minion, and Demon counts match the table for every player count', () => {
+  it('Townsfolk, Outsider, Minion, and Demon counts match the table for every player count (with Baron adjustment)', () => {
     for (let count = 5; count <= 15; count++) {
       const playerIds = Array.from({ length: count }, (_, i) => `player-${i}`);
       const assignments = assignRoles(playerIds);
@@ -70,8 +70,12 @@ describe('role distribution', () => {
         typeCounts[type]++;
       }
 
-      expect(typeCounts.townsfolk).toBe(dist.townsfolk);
-      expect(typeCounts.outsider).toBe(dist.outsider);
+      const hasBaron = assignments.some((a) => a.role === 'baron');
+      const expectedTownsfolk = hasBaron ? dist.townsfolk - 2 : dist.townsfolk;
+      const expectedOutsider = hasBaron ? dist.outsider + 2 : dist.outsider;
+
+      expect(typeCounts.townsfolk).toBe(expectedTownsfolk);
+      expect(typeCounts.outsider).toBe(expectedOutsider);
       expect(typeCounts.minion).toBe(dist.minion);
       expect(typeCounts.demon).toBe(dist.demon);
     }
