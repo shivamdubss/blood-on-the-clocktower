@@ -87,7 +87,7 @@
     "human_review": [
       "Verify role card UI is readable and correctly styled"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "SETUP-01",

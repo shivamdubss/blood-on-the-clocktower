@@ -1,6 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
 import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles } from './gameStateMachine.js';
+import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
   games: Map<string, GameState>;
@@ -14,6 +15,20 @@ function findGameByPlayerId(store: GameStore, playerId: string): GameState | und
   return Array.from(store.games.values()).find((g) =>
     g.players.some((p) => p.id === playerId)
   );
+}
+
+function sanitizeGameStateForPlayer(state: GameState): GameState {
+  return {
+    ...state,
+    hostSecret: '',
+    players: state.players.map((p) => ({
+      ...p,
+      trueRole: 'washerwoman' as const,
+      apparentRole: 'washerwoman' as const,
+      isPoisoned: false,
+      isDrunk: false,
+    })),
+  };
 }
 
 export function registerSocketHandlers(io: Server, store: GameStore): void {
@@ -96,7 +111,40 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       store.games.set(game.id, updatedGame);
 
       io.to(game.id).emit('game_started', { gameId: game.id });
-      io.to(game.id).emit('game_state', updatedGame);
+
+      // Send each player their private role card (using apparentRole so Drunk sees their fake role)
+      for (const player of updatedGame.players) {
+        const roleMeta = ROLE_MAP.get(player.apparentRole);
+        if (roleMeta) {
+          io.to(player.id).emit('your_role', {
+            role: roleMeta.id,
+            name: roleMeta.name,
+            team: roleMeta.team,
+            ability: roleMeta.ability,
+          });
+        }
+      }
+
+      // Send the Storyteller the Grimoire with all true roles
+      if (updatedGame.storytellerId) {
+        const grimoire = updatedGame.players.map((p) => {
+          const trueMeta = ROLE_MAP.get(p.trueRole);
+          const apparentMeta = ROLE_MAP.get(p.apparentRole);
+          return {
+            playerId: p.id,
+            playerName: p.name,
+            trueRole: trueMeta ? { id: trueMeta.id, name: trueMeta.name, team: trueMeta.team, ability: trueMeta.ability } : null,
+            apparentRole: apparentMeta ? { id: apparentMeta.id, name: apparentMeta.name, team: apparentMeta.team, ability: apparentMeta.ability } : null,
+            isAlive: p.isAlive,
+            isPoisoned: p.isPoisoned,
+            isDrunk: p.isDrunk,
+          };
+        });
+        io.to(updatedGame.storytellerId).emit('grimoire', { players: grimoire });
+      }
+
+      // Broadcast sanitized game state (no role info leaked to players)
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 
     socket.on('disconnect', () => {

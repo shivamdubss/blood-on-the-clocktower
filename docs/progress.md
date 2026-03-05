@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
-- **Features Completed:** 6 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01)
-- **Last Known Working State:** All tests passing (49 unit, 13 e2e)
-- **Last Session:** Session 5
+- **Features Completed:** 7 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02)
+- **Last Known Working State:** All tests passing (54 unit, 16 e2e)
+- **Last Session:** Session 6
 
 ## Session Log
+
+### Session 6 -- ROLE-02
+- Implemented ROLE-02: Players receive their private role card after assignment
+- Added `your_role` WebSocket event: each player receives only their own role (apparentRole) with name, team, and ability metadata
+- Added `grimoire` WebSocket event: Storyteller receives all players' true roles, apparent roles, alive/dead/poison/drunk status
+- Added `sanitizeGameStateForPlayer()`: strips trueRole, apparentRole, isPoisoned, isDrunk, and hostSecret from broadcast `game_state` to prevent info leakage
+- Fixed pre-existing flaky e2e test in lobbyStart.spec.ts (race condition: set up both `player_left` and `game_state` listeners before triggering disconnect)
+- 5 new unit tests in `roleCard.test.ts`, 3 new e2e tests in `roleReveal.spec.ts`
+- All 54 unit + 16 e2e tests passing
+- Human review: Verify role card UI is readable and correctly styled
 
 ### Session 5 -- ROLE-01
 - Implemented ROLE-01: Server assigns roles according to official Trouble Brewing distribution table

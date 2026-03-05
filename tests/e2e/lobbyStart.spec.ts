@@ -87,15 +87,14 @@ test.describe('lobby start', () => {
     await waitFor(player, 'game_joined');
     await new Promise<void>((r) => setTimeout(r, 50));
 
-    // Listen for player_left on host
+    // Set up both listeners BEFORE triggering disconnect to avoid race
     const leftPromise = waitFor(host, 'player_left');
+    const statePromise = waitFor(host, 'game_state');
     player.disconnect();
 
     const leftData = (await leftPromise) as { playerId: string };
     expect(leftData.playerId).toBeTruthy();
 
-    // Wait for updated state
-    const statePromise = waitFor(host, 'game_state');
     const state = (await statePromise) as { players: { name: string }[] };
     expect(state.players).toHaveLength(1);
     expect(state.players[0].name).toBe('Host');
