@@ -1,6 +1,7 @@
-import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry } from '../types/game.js';
 import type { AbilityContext, AbilityResult } from '../types/ability.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
+import { NIGHT_1_ORDER, NIGHT_OTHER_ORDER } from '../data/nightOrder.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
   return {
@@ -377,7 +378,30 @@ export function resolveExecution(state: GameState): GameState {
   return newState;
 }
 
+export function generateNightQueue(state: GameState): NightQueueEntry[] {
+  const nightNumber = state.dayNumber + 1; // Night follows the current day
+  const order = nightNumber === 1 ? NIGHT_1_ORDER : NIGHT_OTHER_ORDER;
+
+  return order
+    .map((roleId) => {
+      // Find an alive player with this role.
+      // The Drunk's apparent ability fires as their apparentRole,
+      // so match both trueRole and apparentRole (for Drunk players).
+      const player = state.players.find(
+        (p) => p.isAlive && (p.trueRole === roleId || (p.isDrunk && p.apparentRole === roleId))
+      );
+      if (!player) return null;
+      return {
+        roleId,
+        playerId: player.id,
+        completed: false,
+      };
+    })
+    .filter((entry): entry is NightQueueEntry => entry !== null);
+}
+
 export function transitionToNight(state: GameState): GameState {
+  const nightQueue = generateNightQueue(state);
   return {
     ...state,
     phase: 'night' as Phase,
@@ -385,6 +409,8 @@ export function transitionToNight(state: GameState): GameState {
     nominations: [],
     activeNominationIndex: null,
     executedPlayerId: null,
+    nightQueue,
+    nightQueuePosition: 0,
     gameLog: [
       ...state.gameLog,
       { timestamp: Date.now(), type: 'phase_transition', data: { phase: 'night' } },

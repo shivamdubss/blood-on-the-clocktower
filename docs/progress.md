@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 4 (Night Phase Infrastructure + Ability Context)
-- **Features Completed:** 18 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01)
-- **Last Known Working State:** All tests passing (184 unit, 16 e2e)
-- **Last Session:** Session 17
+- **Features Completed:** 19 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01)
+- **Last Known Working State:** All tests passing (197 unit, 16 e2e)
+- **Last Session:** Session 18
 
 ## Session Log
+
+### Session 18 -- NIGHT-01
+- Implemented NIGHT-01: Night order as static data with runtime queue generation
+- Added `generateNightQueue()` to `gameStateMachine.ts`: reads NIGHT_1_ORDER or NIGHT_OTHER_ORDER based on dayNumber, filters to alive players with matching trueRole (or apparentRole for Drunk players)
+- Updated `transitionToNight()` to automatically populate `nightQueue` and reset `nightQueuePosition` to 0
+- Drunk players appear in the queue under their apparentRole (e.g., washerwoman) since their apparent ability fires normally
+- Roles not in the night order (soldier, virgin, saint, baron, scarletWoman, etc.) are excluded
+- Dead players are excluded from the queue
+- 13 new unit tests in `nightOrder.test.ts`: static data validation, official order verification, queue filtering by role presence, dead player exclusion, passive role exclusion, Drunk apparentRole handling, player-to-entry mapping, empty queue edge case, transitionToNight integration
+- All 197 unit + 16 e2e tests passing
 
 ### Session 17 -- ARCH-01
 - Implemented ARCH-01: Ability execution context with isPoisoned and isDrunk flags
