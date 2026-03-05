@@ -2,9 +2,9 @@
 
 ## Current State
 - **Current Milestone:** Milestone 5 (Evil Team Abilities + Poisoner/Drunk System)
-- **Features Completed:** 25 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY)
-- **Last Known Working State:** All tests passing (335 unit, 16 e2e)
-- **Last Session:** Session 24
+- **Features Completed:** 26 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN)
+- **Last Known Working State:** All tests passing (350 unit, 16 e2e)
+- **Last Session:** Session 25
 
 ## Session Log
 
