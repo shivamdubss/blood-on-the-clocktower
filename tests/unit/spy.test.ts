@@ -346,7 +346,7 @@ describe('Spy', () => {
         makePlayer({ id: 'p7', name: 'Grace', trueRole: 'butler', apparentRole: 'butler', seatIndex: 6 }),
       ];
 
-      let g = { ...store.games.get(gameId)!, players, storytellerId: storyteller.id!, phase: 'day' as const, daySubPhase: 'end' as const, dayNumber: 1 };
+      let g: GameState = { ...store.games.get(gameId)!, players, storytellerId: storyteller.id!, phase: 'day' as const, daySubPhase: 'end' as const, dayNumber: 1 };
       g = transitionToNight(g);
 
       const spyIdx = g.nightQueue.findIndex(e => e.roleId === 'spy');
@@ -391,7 +391,7 @@ describe('Spy', () => {
         makePlayer({ id: 'p7', name: 'Grace', trueRole: 'butler', apparentRole: 'butler', seatIndex: 6 }),
       ];
 
-      let g = { ...store.games.get(gameId)!, players, storytellerId: storyteller.id!, phase: 'day' as const, daySubPhase: 'end' as const, dayNumber: 1 };
+      let g: GameState = { ...store.games.get(gameId)!, players, storytellerId: storyteller.id!, phase: 'day' as const, daySubPhase: 'end' as const, dayNumber: 1 };
       g = transitionToNight(g);
 
       // Position to spy
