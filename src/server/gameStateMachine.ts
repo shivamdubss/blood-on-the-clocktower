@@ -692,6 +692,16 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
     promptDescription,
   };
 
+  // Include Recluse info for detection abilities
+  const DETECTION_ROLES: RoleId[] = ['washerwoman', 'librarian', 'investigator', 'chef', 'empath', 'fortuneTeller'];
+  if (DETECTION_ROLES.includes(entry.roleId)) {
+    const recluse = state.players.find((p) => p.trueRole === 'recluse' && p.isAlive);
+    if (recluse) {
+      prompt.recluseInfo = { playerId: recluse.id, playerName: recluse.name };
+      prompt.promptDescription += ` ⚠ ${recluse.name} is the Recluse — they may register as Evil or as a Minion/Demon.`;
+    }
+  }
+
   // Include Ravenkeeper killed-tonight status and change prompt type
   if (entry.roleId === 'ravenkeeper') {
     const killedByDemon = state.pendingDeaths.includes(player.id);

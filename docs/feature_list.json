@@ -699,7 +699,7 @@
       "test:unit -- --grep 'Recluse registration'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-SAINT",

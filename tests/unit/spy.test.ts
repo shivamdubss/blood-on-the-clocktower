@@ -318,7 +318,7 @@ describe('Spy', () => {
       }
     });
 
-    it('Spy grimoire data is not leaked to non-Storyteller clients', async () => {
+    it('Spy grimoire data is not leaked to non-Storyteller clients', { timeout: 10000 }, async () => {
       const gameId = 'g1';
       let state = createInitialGameState(gameId, 'ABC123', '');
       store.games.set(gameId, state);

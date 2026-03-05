@@ -94,6 +94,10 @@ export interface NightPromptInfo {
     trueRole: string;
   };
   ravenkeeperKilledTonight?: boolean;
+  recluseInfo?: {
+    playerId: string;
+    playerName: string;
+  };
 }
 
 export interface GameState {

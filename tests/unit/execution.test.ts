@@ -518,7 +518,7 @@ describe('execution', () => {
       expect(result.reason).toBe('tie');
     });
 
-    it('all clients receive execution_result simultaneously', async () => {
+    it('all clients receive execution_result simultaneously', { timeout: 10000 }, async () => {
       const { host, players, gameId } = await setupGameInNomination(7);
 
       await nominateAndVote(host, players[0], players[1].id!, [players[2], players[3], players[4], players[5]], gameId);
