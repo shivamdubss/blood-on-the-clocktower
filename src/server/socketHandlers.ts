@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, checkMayorWin, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride, processPoisonerAction, processMonkAction, processImpAction, processVirginNomination } from './gameStateMachine.js';
 import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -380,11 +380,10 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       }
 
       let updatedGame = addNomination(game, socket.id, data.nomineeId);
-      const nominationIndex = updatedGame.nominations.length - 1;
 
-      // Automatically start a vote on this nomination
-      updatedGame = startVote(updatedGame, nominationIndex);
-      store.games.set(game.id, updatedGame);
+      // Check for Virgin ability trigger
+      const virginResult = processVirginNomination(updatedGame, socket.id, data.nomineeId);
+      updatedGame = virginResult.state;
 
       const nominatorName = nominator.name;
       const nomineeName = nominee.name;
@@ -395,6 +394,45 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         nomineeId: data.nomineeId,
         nomineeName,
       });
+
+      if (virginResult.nominatorExecuted) {
+        // Virgin triggered: nominator is executed immediately, no vote happens
+        store.games.set(game.id, updatedGame);
+
+        io.to(game.id).emit('virgin_triggered', {
+          virginId: data.nomineeId,
+          virginName: nomineeName,
+          executedId: socket.id,
+          executedName: nominatorName,
+        });
+        io.to(game.id).emit('execution_result', {
+          executed: { playerId: socket.id, playerName: nominatorName },
+          reason: 'virgin',
+        });
+
+        // Check win conditions after execution (e.g., Saint executed by Virgin)
+        if (updatedGame.winner) {
+          io.to(game.id).emit('game_over', {
+            winner: updatedGame.winner,
+            players: updatedGame.players.map((p) => ({
+              id: p.id,
+              name: p.name,
+              trueRole: p.trueRole,
+              apparentRole: p.apparentRole,
+              isAlive: p.isAlive,
+            })),
+          });
+        }
+
+        io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+        return;
+      }
+
+      // Normal nomination flow: start a vote
+      const nominationIndex = updatedGame.nominations.length - 1;
+      updatedGame = startVote(updatedGame, nominationIndex);
+      store.games.set(game.id, updatedGame);
+
       io.to(game.id).emit('vote_started', {
         nominationIndex,
         nomineeId: data.nomineeId,

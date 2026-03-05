@@ -1,6 +1,6 @@
 import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo, StorytellerOverride, GrimoireData } from '../types/game.js';
 import type { AbilityContext, AbilityResult } from '../types/ability.js';
-import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
+import { assignRoles as computeRoleAssignments, getRoleType } from './roleDistribution.js';
 import { NIGHT_1_ORDER, NIGHT_OTHER_ORDER } from '../data/nightOrder.js';
 import { ROLE_MAP } from '../data/roles.js';
 
@@ -214,6 +214,88 @@ export function addNomination(state: GameState, nominatorId: string, nomineeId: 
       { timestamp: Date.now(), type: 'nomination', data: { nominatorId, nomineeId } },
     ],
   };
+}
+
+export interface VirginNominationResult {
+  state: GameState;
+  triggered: boolean;
+  nominatorExecuted: boolean;
+}
+
+export function processVirginNomination(state: GameState, nominatorId: string, nomineeId: string): VirginNominationResult {
+  const nominee = state.players.find((p) => p.id === nomineeId);
+  const nominator = state.players.find((p) => p.id === nominatorId);
+
+  if (!nominee || !nominator) {
+    return { state, triggered: false, nominatorExecuted: false };
+  }
+
+  // Virgin ability only triggers if nominee is the Virgin and ability hasn't been used
+  const isVirgin = nominee.trueRole === 'virgin';
+  if (!isVirgin || state.virginAbilityUsed) {
+    return { state, triggered: false, nominatorExecuted: false };
+  }
+
+  // Mark ability as used (spent on first nomination regardless of outcome)
+  let newState: GameState = {
+    ...state,
+    virginAbilityUsed: true,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'virgin_nominated', data: { nominatorId, nomineeId } },
+    ],
+  };
+
+  // If Virgin is poisoned, ability doesn't trigger
+  if (nominee.isPoisoned) {
+    return { state: newState, triggered: true, nominatorExecuted: false };
+  }
+
+  // Check if nominator's apparent role is a Townsfolk
+  const nominatorApparentType = getRoleType(nominator.apparentRole);
+  if (nominatorApparentType !== 'townsfolk') {
+    return { state: newState, triggered: true, nominatorExecuted: false };
+  }
+
+  // Nominator is a Townsfolk (by apparent role) — execute them immediately
+  newState = killPlayer(newState, nominatorId);
+  newState = {
+    ...newState,
+    executedPlayerId: nominatorId,
+    gameLog: [
+      ...newState.gameLog,
+      { timestamp: Date.now(), type: 'virgin_execution', data: { executedPlayerId: nominatorId } },
+    ],
+  };
+
+  // Check win conditions: Saint executed → Evil wins; Demon executed → Good wins (with SW check)
+  const executedPlayer = newState.players.find((p) => p.id === nominatorId)!;
+  if (executedPlayer.trueRole === 'saint' && !executedPlayer.isPoisoned) {
+    newState = { ...newState, winner: 'evil', phase: 'ended' };
+  } else if (executedPlayer.trueRole === 'imp') {
+    const aliveBeforeDeath = state.players.filter((p) => p.isAlive).length;
+    const scarletWoman = state.players.find(
+      (p) => p.trueRole === 'scarletWoman' && p.isAlive && !p.isPoisoned
+    );
+    if (scarletWoman && aliveBeforeDeath >= 5) {
+      newState = {
+        ...newState,
+        players: newState.players.map((p) =>
+          p.id === scarletWoman.id ? { ...p, trueRole: 'imp' as const } : p
+        ),
+        gameLog: [
+          ...newState.gameLog,
+          { timestamp: Date.now(), type: 'scarlet_woman_trigger', data: { playerId: scarletWoman.id } },
+        ],
+      };
+    } else {
+      newState = { ...newState, winner: 'good', phase: 'ended' };
+    }
+  } else {
+    newState = checkWinConditions(newState);
+  }
+
+  return { state: newState, triggered: true, nominatorExecuted: true };
 }
 
 export function clearNominations(state: GameState): GameState {

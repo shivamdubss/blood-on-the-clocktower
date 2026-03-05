@@ -87,9 +87,9 @@ describe('nomination', () => {
     await waitForEvent(host, 'game_started');
     await new Promise<void>((r) => setTimeout(r, 50));
 
-    // Transition to day/dawn
+    // Neutralize Virgin ability to prevent random interference with nomination tests
     const currentGame = store.games.get('game-1')!;
-    store.games.set('game-1', { ...currentGame, phase: 'night' });
+    store.games.set('game-1', { ...currentGame, phase: 'night', virginAbilityUsed: true });
 
     host.emit('transition_to_day', { gameId: 'game-1' });
     await waitForEvent(host, 'dawn_announcement');
