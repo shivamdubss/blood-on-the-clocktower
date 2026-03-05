@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 31 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR)
-- **Last Known Working State:** All tests passing (414 unit, 16 e2e)
-- **Last Session:** Session 29
+- **Features Completed:** 32 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF)
+- **Last Known Working State:** All tests passing (430 unit, 16 e2e)
+- **Last Session:** Session 30
 
 ## Session Log
+
+### Session 30 -- ABILITY-CHEF
+- Implemented ABILITY-CHEF: Chef learns the number of evil pairs sitting adjacent on Night 1
+- Updated `src/roles/chef.ts` ability handler: validates `number` input from Storyteller, checks isPoisoned/isDrunk for isCorrupted flag
+- Infrastructure already in place: chef in NIGHT_1_ORDER, prompt type `provide_number`, prompt description mentioning evil pairs, included in INFO_ROLES
+- Storyteller computes evil pair count based on seating order (join order determines seat positions) and provides the number
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false number
+- 16 new tests in `chef.test.ts`: 2 night order tests, 1 night prompt test, 7 ability handler tests (success, zero pairs, validation, seating, poisoned, drunk), 5 WebSocket tests (info delivery, zero pairs delivery, poisoned info, isPoisoned flag, isDrunk flag)
+- All 430 unit + 16 e2e tests passing
+- Next feature: ABILITY-EMPATH
 
 ### Session 29 -- ABILITY-INVESTIGATOR
 - Implemented ABILITY-INVESTIGATOR: Investigator learns one of two players is a specific Minion on Night 1

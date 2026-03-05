@@ -11,6 +11,19 @@ export const metadata: RoleMetadata = {
   otherNights: false,
 };
 
-export const abilityHandler: AbilityHandler = (_context, _input) => {
-  return { success: true };
+export const abilityHandler: AbilityHandler = (context, input) => {
+  const data = input as { number?: number } | undefined;
+  if (data?.number === undefined || typeof data.number !== 'number') {
+    return { success: false, message: 'Must provide a number (evil pair count)' };
+  }
+
+  const isCorrupted = context.isPoisoned || context.isDrunk;
+
+  return {
+    success: true,
+    data: {
+      number: data.number,
+      isCorrupted,
+    },
+  };
 };
