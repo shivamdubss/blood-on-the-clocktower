@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Virgin',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'The 1st time you are nominated, if the nominator is a Townsfolk, they are executed immediately.',
   firstNight: false,
   otherNights: false,
 };

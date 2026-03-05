@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Mayor',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'If only 3 players live & no execution occurs, your team wins. If you die at night, another player might die instead.',
   firstNight: false,
   otherNights: false,
 };

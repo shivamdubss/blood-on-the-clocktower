@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Drunk',
   team: 'outsider',
   type: 'outsider',
-  ability: '',
+  ability: 'You do not know you are the Drunk. You think you are a Townsfolk character, but your ability malfunctions.',
   firstNight: false,
   otherNights: false,
 };

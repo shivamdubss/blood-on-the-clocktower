@@ -6,9 +6,9 @@ export const metadata: RoleMetadata = {
   name: 'Monk',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'Each night*, choose a player (not yourself): they are safe from the Demon tonight.',
   firstNight: false,
-  otherNights: false,
+  otherNights: true,
 };
 
 export const abilityHandler: AbilityHandler = (_context, _input) => {

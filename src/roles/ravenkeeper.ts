@@ -6,9 +6,9 @@ export const metadata: RoleMetadata = {
   name: 'Ravenkeeper',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'If you die at night, you are woken to choose a player: you learn their character.',
   firstNight: false,
-  otherNights: false,
+  otherNights: true,
 };
 
 export const abilityHandler: AbilityHandler = (_context, _input) => {

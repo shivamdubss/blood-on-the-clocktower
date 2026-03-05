@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Slayer',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'Once per game, during the day, publicly choose a player: if they are the Demon, they die.',
   firstNight: false,
   otherNights: false,
 };

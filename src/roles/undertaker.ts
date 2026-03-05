@@ -6,9 +6,9 @@ export const metadata: RoleMetadata = {
   name: 'Undertaker',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'Each night*, you learn which character died by execution today.',
   firstNight: false,
-  otherNights: false,
+  otherNights: true,
 };
 
 export const abilityHandler: AbilityHandler = (_context, _input) => {

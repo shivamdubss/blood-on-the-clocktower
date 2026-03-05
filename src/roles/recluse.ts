@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Recluse',
   team: 'outsider',
   type: 'outsider',
-  ability: '',
+  ability: 'You might register as Evil & as a Minion or Demon, even if dead.',
   firstNight: false,
   otherNights: false,
 };

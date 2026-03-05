@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Saint',
   team: 'outsider',
   type: 'outsider',
-  ability: '',
+  ability: 'If you die by execution, your team loses.',
   firstNight: false,
   otherNights: false,
 };

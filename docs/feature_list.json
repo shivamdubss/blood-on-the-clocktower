@@ -903,7 +903,7 @@
     "human_review": [
       "Audit role files to confirm no cross-role imports"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "UI-01",

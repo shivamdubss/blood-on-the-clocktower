@@ -6,8 +6,8 @@ export const metadata: RoleMetadata = {
   name: 'Washerwoman',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
-  firstNight: false,
+  ability: 'You start knowing that 1 of 2 players is a particular Townsfolk.',
+  firstNight: true,
   otherNights: false,
 };
 

@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Baron',
   team: 'minion',
   type: 'minion',
-  ability: '',
+  ability: 'There are extra Outsiders in play. [+2 Outsiders]',
   firstNight: false,
   otherNights: false,
 };

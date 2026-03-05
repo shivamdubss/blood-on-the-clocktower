@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Scarlet Woman',
   team: 'minion',
   type: 'minion',
-  ability: '',
+  ability: 'If there are 5 or more players alive & the Demon dies, you become the Demon.',
   firstNight: false,
   otherNights: false,
 };

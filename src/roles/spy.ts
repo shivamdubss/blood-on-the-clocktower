@@ -6,9 +6,9 @@ export const metadata: RoleMetadata = {
   name: 'Spy',
   team: 'minion',
   type: 'minion',
-  ability: '',
-  firstNight: false,
-  otherNights: false,
+  ability: 'Each night, you see the Grimoire. You might register as Good & as a Townsfolk or Outsider, even if dead.',
+  firstNight: true,
+  otherNights: true,
 };
 
 export const abilityHandler: AbilityHandler = (_context, _input) => {

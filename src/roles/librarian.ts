@@ -6,8 +6,8 @@ export const metadata: RoleMetadata = {
   name: 'Librarian',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
-  firstNight: false,
+  ability: 'You start knowing that 1 of 2 players is a particular Outsider. (Or that there are no Outsiders in play.)',
+  firstNight: true,
   otherNights: false,
 };
 

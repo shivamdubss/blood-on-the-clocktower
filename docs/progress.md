@@ -1,14 +1,21 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 1 (Foundation)
-- **Features Completed:** 4 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01)
-- **Last Known Working State:** All tests passing (37 unit, 13 e2e)
+- **Current Milestone:** Milestone 1 (Foundation) -- COMPLETE
+- **Features Completed:** 5 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02)
+- **Last Known Working State:** All tests passing (41 unit, 13 e2e)
 - **Last Session:** Session 4
 
 ## Session Log
 
-### Session 4 -- STATE-01
+### Session 4 -- STATE-01 + STATE-02
+- Implemented STATE-01: verified all game state mutations go through gameStateMachine.ts
+- Implemented STATE-02: verified all 22 role files are self-contained modules
+- Updated all role files with correct metadata (ability text, firstNight, otherNights) from central ROLES data
+- Human review: Audit role files to confirm no cross-role imports; Audit codebase to confirm no client-side state mutations
+- MILESTONE 1 COMPLETE
+
+### Session 4 (earlier) -- STATE-01
 - Implemented STATE-01: verified all game state mutations go through gameStateMachine.ts
 - Fixed direct state mutation in socketHandlers.ts (storytellerId was set via spread instead of state machine function)
 - Added `setStoryteller()` function to gameStateMachine.ts

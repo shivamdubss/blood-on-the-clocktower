@@ -6,7 +6,7 @@ export const metadata: RoleMetadata = {
   name: 'Soldier',
   team: 'townsfolk',
   type: 'townsfolk',
-  ability: '',
+  ability: 'You are safe from the Demon.',
   firstNight: false,
   otherNights: false,
 };
