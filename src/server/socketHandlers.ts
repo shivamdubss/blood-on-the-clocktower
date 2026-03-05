@@ -20,8 +20,8 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
   io.on('connection', (socket: Socket) => {
     console.log(`Client connected: ${socket.id}`);
 
-    socket.on('join_game', (data: { joinCode: string; playerName: string }) => {
-      const { joinCode, playerName } = data;
+    socket.on('join_game', (data: { joinCode: string; playerName: string; hostSecret?: string }) => {
+      const { joinCode, playerName, hostSecret } = data;
       const game = findGameByJoinCode(store, joinCode);
 
       if (!game) {
@@ -40,6 +40,12 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         return;
       }
 
+      // If hostSecret matches, claim storyteller role
+      let currentGame = game;
+      if (hostSecret && game.hostSecret && hostSecret === game.hostSecret) {
+        currentGame = { ...game, storytellerId: socket.id };
+      }
+
       const player: Player = {
         id: socket.id,
         name: playerName,
@@ -50,16 +56,16 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         isDrunk: false,
         hasGhostVote: true,
         ghostVoteUsed: false,
-        seatIndex: game.players.length,
+        seatIndex: currentGame.players.length,
       };
 
-      const updatedGame = addPlayer(game, player);
-      store.games.set(game.id, updatedGame);
+      const updatedGame = addPlayer(currentGame, player);
+      store.games.set(currentGame.id, updatedGame);
 
-      socket.join(game.id);
-      socket.emit('game_joined', { gameId: game.id, playerId: player.id });
-      io.to(game.id).emit('player_joined', { player: { id: player.id, name: player.name, seatIndex: player.seatIndex } });
-      io.to(game.id).emit('game_state', updatedGame);
+      socket.join(currentGame.id);
+      socket.emit('game_joined', { gameId: currentGame.id, playerId: player.id });
+      io.to(currentGame.id).emit('player_joined', { player: { id: player.id, name: player.name, seatIndex: player.seatIndex } });
+      io.to(currentGame.id).emit('game_state', updatedGame);
     });
 
     socket.on('start_game', (data: { gameId: string }) => {

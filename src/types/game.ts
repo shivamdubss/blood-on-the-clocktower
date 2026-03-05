@@ -77,6 +77,7 @@ export interface GameState {
   pendingDeaths: string[];
   gameLog: GameLogEntry[];
   winner: 'good' | 'evil' | null;
+  hostSecret: string;
   storytellerNotes: string;
   createdAt: number;
 }

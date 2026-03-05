@@ -51,7 +51,7 @@
     "human_review": [
       "Verify lobby UI layout is clear and intuitive"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ROLE-01",

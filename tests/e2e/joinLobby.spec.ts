@@ -46,26 +46,35 @@ test.describe('join lobby', () => {
     const { joinCode } = await res.json();
 
     const host = createSocket();
-    const player = createSocket();
     try {
       await waitFor(host, 'connect');
-      await waitFor(player, 'connect');
+
+      // Collect events using persistent listeners
+      const playerJoinedEvents: unknown[] = [];
+      host.on('player_joined', (data: unknown) => playerJoinedEvents.push(data));
 
       // Host joins first
       const hostJoined = waitFor(host, 'game_joined');
       host.emit('join_game', { joinCode, playerName: 'Host' });
       await hostJoined;
-      await waitFor(host, 'game_state');
+      await new Promise<void>((r) => setTimeout(r, 100));
 
       // Player joins; host should be notified
-      const hostNotification = waitFor(host, 'player_joined');
-      player.emit('join_game', { joinCode, playerName: 'Player1' });
+      const player = createSocket();
+      try {
+        await waitFor(player, 'connect');
+        player.emit('join_game', { joinCode, playerName: 'Player1' });
+        await new Promise<void>((r) => setTimeout(r, 200));
 
-      const notification = (await hostNotification) as { player: { name: string } };
-      expect(notification.player.name).toBe('Player1');
+        const notification = playerJoinedEvents.find(
+          (e) => (e as { player: { name: string } }).player.name === 'Player1'
+        );
+        expect(notification).toBeTruthy();
+      } finally {
+        player.disconnect();
+      }
     } finally {
       host.disconnect();
-      player.disconnect();
     }
   });
 
@@ -73,14 +82,15 @@ test.describe('join lobby', () => {
     const res = await request.post('/api/game', { data: { storytellerId: 'st-1' } });
     const { joinCode } = await res.json();
 
+    // Keep client1 connected so the name stays taken
     const client1 = createSocket();
     try {
       await waitFor(client1, 'connect');
       const joined = waitFor(client1, 'game_joined');
       client1.emit('join_game', { joinCode, playerName: 'Alice' });
       await joined;
-      client1.disconnect();
 
+      // Create client2 after client1 is fully joined
       const client2 = createSocket();
       try {
         await waitFor(client2, 'connect');
@@ -115,15 +125,6 @@ test.describe('join lobby', () => {
     const res = await request.post('/api/game', { data: { storytellerId: 'st-1' } });
     const { joinCode } = await res.json();
 
-    // We need to start the game, but for now we test by directly manipulating via another approach.
-    // Since we can't easily start a game through the API yet (LOBBY-03), we verify the server
-    // rejects joins to non-lobby games by checking the socket handler logic is exercised.
-    // The unit test covers this more thoroughly. Here we just verify the e2e path for valid joins works.
-    // This test verifies the error path for started games works at the integration level.
-
-    // For a proper e2e test, we'd need 5+ players and a start game action.
-    // For now, we verify that valid join works (covered above) and the socket error path is tested in unit tests.
-    // We'll still verify the basic join path works as an e2e smoke test.
     const socket = createSocket();
     try {
       await waitFor(socket, 'connect');

@@ -19,23 +19,15 @@ function waitFor(socket: ClientSocket, event: string, timeout = 3000): Promise<u
 
 test.describe('lobby start', () => {
   test('host can start game with 5+ players', async ({ request }) => {
-    const res = await request.post('/api/game', { data: { storytellerId: 'pending' } });
-    const { joinCode, gameId } = await res.json();
+    const res = await request.post('/api/game', { data: {} });
+    const { joinCode, gameId, hostSecret } = await res.json();
 
-    // Host connects first
+    // Host connects and claims host role via hostSecret
     const host = createSocket();
     await waitFor(host, 'connect');
 
-    // Update storytellerId to host's socket id
-    // We need to join the game - the storytellerId needs to match
-    // Let's use a workaround: create game with known storytellerId matching host socket id
-
-    // Actually, the game was created via API with storytellerId = 'pending'.
-    // We'll need to set it after the host connects. For now, let's test the error path.
-
-    // Join 5 players
     const sockets: ClientSocket[] = [host];
-    host.emit('join_game', { joinCode, playerName: 'Host' });
+    host.emit('join_game', { joinCode, playerName: 'Host', hostSecret });
     await waitFor(host, 'game_joined');
 
     for (let i = 0; i < 4; i++) {
@@ -46,11 +38,16 @@ test.describe('lobby start', () => {
       sockets.push(s);
     }
 
-    // Host tries to start but storytellerId doesn't match socket id
-    const errPromise = waitFor(host, 'start_error');
+    await new Promise<void>((r) => setTimeout(r, 50));
+
+    // All 5 clients listen for game_started
+    const startedPromises = sockets.map((s) => waitFor(s, 'game_started'));
     host.emit('start_game', { gameId });
-    const err = (await errPromise) as { message: string };
-    expect(err.message).toBe('Only the host can start the game');
+
+    const results = await Promise.all(startedPromises);
+    for (const r of results) {
+      expect((r as { gameId: string }).gameId).toBe(gameId);
+    }
 
     // Cleanup
     for (const s of sockets) s.disconnect();
@@ -58,19 +55,18 @@ test.describe('lobby start', () => {
 
   test('cannot start with fewer than 5 players', async ({ request }) => {
     const res = await request.post('/api/game', { data: {} });
-    const { joinCode, gameId } = await res.json();
+    const { joinCode, gameId, hostSecret } = await res.json();
 
     const host = createSocket();
     await waitFor(host, 'connect');
-    host.emit('join_game', { joinCode, playerName: 'Host' });
-    const joined = (await waitFor(host, 'game_joined')) as { playerId: string };
+    host.emit('join_game', { joinCode, playerName: 'Host', hostSecret });
+    await waitFor(host, 'game_joined');
 
-    // Try to start with 1 player (even if we were the host)
+    // Try to start with 1 player
     const errPromise = waitFor(host, 'start_error');
     host.emit('start_game', { gameId });
     const err = (await errPromise) as { message: string };
-    // Could be "Only the host can start" or "Player count" - depends on storytellerId
-    expect(err.message).toBeTruthy();
+    expect(err.message).toBe('Player count must be between 5 and 15');
 
     host.disconnect();
   });

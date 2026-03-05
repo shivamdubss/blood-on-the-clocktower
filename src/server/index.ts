@@ -44,16 +44,17 @@ function generateUniqueJoinCode(games: Map<string, GameState>): string {
 app.post('/api/game', (req, res) => {
   const id = Math.random().toString(36).slice(2, 10);
   const joinCode = generateUniqueJoinCode(store.games);
-  const storytellerId = req.body?.storytellerId ?? id;
+  const hostSecret = Math.random().toString(36).slice(2, 14);
+  const storytellerId = req.body?.storytellerId ?? null;
 
-  const game = createInitialGameState(id, joinCode, storytellerId);
+  const game = createInitialGameState(id, joinCode, storytellerId, hostSecret);
   store.games.set(id, game);
 
   const protocol = req.protocol;
   const host = req.get('host') ?? `localhost:${PORT}`;
   const wsUrl = `${protocol === 'https' ? 'wss' : 'ws'}://${host}`;
 
-  res.json({ gameId: id, joinCode, wsUrl });
+  res.json({ gameId: id, joinCode, wsUrl, hostSecret });
 });
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;

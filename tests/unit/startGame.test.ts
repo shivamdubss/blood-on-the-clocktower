@@ -75,7 +75,7 @@ describe('start game', () => {
     await waitForEvent(host, 'connect');
 
     // Create game with host as storyteller
-    const game = createInitialGameState('game-1', 'ABC123', host.id);
+    const game = createInitialGameState('game-1', 'ABC123', host.id!);
     // Add only 3 players (too few)
     let g = game;
     for (let i = 0; i < 3; i++) {
@@ -99,7 +99,7 @@ describe('start game', () => {
     const host = createClient();
     await waitForEvent(host, 'connect');
 
-    const game = createInitialGameState('game-1', 'ABC123', host.id);
+    const game = createInitialGameState('game-1', 'ABC123', host.id!);
     store.games.set(game.id, game);
 
     // Host joins
@@ -142,11 +142,11 @@ describe('start game', () => {
 
   it('only the host can start the game', async () => {
     const host = createClient();
-    const player = createClient();
     await waitForEvent(host, 'connect');
+    const player = createClient();
     await waitForEvent(player, 'connect');
 
-    const game = createInitialGameState('game-1', 'ABC123', host.id);
+    const game = createInitialGameState('game-1', 'ABC123', host.id!);
     store.games.set(game.id, game);
 
     host.emit('join_game', { joinCode: 'ABC123', playerName: 'Host' });

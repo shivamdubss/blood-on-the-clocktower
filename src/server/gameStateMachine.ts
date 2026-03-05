@@ -1,6 +1,6 @@
 import type { GameState, Player, Phase, RoleId } from '../types/game.js';
 
-export function createInitialGameState(id: string, joinCode: string, storytellerId: string): GameState {
+export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
   return {
     id,
     joinCode,
@@ -20,6 +20,7 @@ export function createInitialGameState(id: string, joinCode: string, storyteller
     pendingDeaths: [],
     gameLog: [],
     winner: null,
+    hostSecret: hostSecret ?? '',
     storytellerNotes: '',
     createdAt: Date.now(),
   };
