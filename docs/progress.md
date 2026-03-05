@@ -2,11 +2,22 @@
 
 ## Current State
 - **Current Milestone:** Milestone 7 (Outsider Abilities + Edge Cases)
-- **Features Completed:** 42 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR, ABILITY-BUTLER, ABILITY-RECLUSE)
-- **Last Known Working State:** All tests passing (615 unit, 16 e2e)
-- **Last Session:** Session 39
+- **Features Completed:** 43 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR, ABILITY-BUTLER, ABILITY-RECLUSE, ABILITY-SAINT)
+- **Last Known Working State:** All tests passing (626 unit, 16 e2e)
+- **Last Session:** Session 40
 
 ## Session Log
+
+### Session 40 -- ABILITY-SAINT
+- Marked ABILITY-SAINT as passing: Saint execution triggers Good loss (Evil wins)
+- Saint is a passive Outsider (firstNight: false, otherNights: false) with no night action
+- Saint execution logic already implemented in `resolveExecution()` (gameStateMachine.ts line ~439) and Virgin trigger path (line ~274)
+- If Saint is executed, `winner` is set to `'evil'` and phase to `'ended'` immediately
+- If Saint is poisoned when executed, the loss condition does NOT trigger (normal execution proceeds)
+- Saint dying at night (Demon kill via `resolveDawnDeaths`) does NOT trigger the loss condition
+- 11 new tests in `saint.test.ts`: 3 metadata tests (team, passive, ability text), 6 state machine tests (execution triggers Evil win, triggers before other checks, poisoned no trigger, night death no trigger, dead Saint no effect, non-Saint execution), 2 WebSocket tests (game_over with Evil win, poisoned Saint no game_over)
+- All 626 unit + 16 e2e tests passing
+- Next feature: EDGE-03 (Virgin + Drunk nominator)
 
 ### Session 39 -- ABILITY-RECLUSE
 - Marked ABILITY-RECLUSE as passing: Recluse registration in detection abilities

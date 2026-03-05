@@ -717,7 +717,7 @@
       "test:unit -- --grep 'Saint poisoned'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-POISONER",
