@@ -10,7 +10,7 @@ import {
   clearPoison,
   checkWinConditions,
   setStoryteller,
-  applyStorytellOverride,
+  applyStorytellerOverride,
 } from '../../src/server/gameStateMachine.js';
 import type { GameState, Player } from '../../src/types/game.js';
 
@@ -133,11 +133,18 @@ describe('state machine', () => {
     expect(result.phase).toBe('ended');
   });
 
-  it('applyStorytellOverride merges partial state', () => {
-    const state = createInitialGameState('g1', 'ABC123', 'st1');
-    const overridden = applyStorytellOverride(state, { storytellerNotes: 'test note' });
-    expect(overridden.storytellerNotes).toBe('test note');
+  it('applyStorytellerOverride applies a typed override and logs it', () => {
+    let state = createInitialGameState('g1', 'ABC123', 'st1');
+    const player: Player = {
+      id: 'p1', name: 'Alice', trueRole: 'washerwoman', apparentRole: 'washerwoman',
+      isAlive: true, isPoisoned: false, isDrunk: false, hasGhostVote: true, ghostVoteUsed: false, seatIndex: 0,
+    };
+    state = { ...state, players: [player] };
+    const overridden = applyStorytellerOverride(state, { type: 'kill_player', playerId: 'p1' });
+    expect(overridden.players[0].isAlive).toBe(false);
     expect(overridden.id).toBe('g1');
+    const lastLog = overridden.gameLog[overridden.gameLog.length - 1];
+    expect(lastLog.type).toBe('storyteller_override');
   });
 });
 
@@ -156,7 +163,7 @@ describe('state mutation', () => {
     clearPoison(state);
     checkWinConditions(state);
     setStoryteller(state, 'new-st');
-    applyStorytellOverride(state, { dayNumber: 5 });
+    applyStorytellerOverride(state, { type: 'kill_player', playerId: 'p1' });
 
     // Original state is completely unmodified
     expect(JSON.stringify(state)).toBe(snapshot);

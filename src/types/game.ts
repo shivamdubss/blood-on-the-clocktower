@@ -106,6 +106,25 @@ export interface GameLogEntry {
   data: unknown;
 }
 
+export type OverrideType =
+  | 'kill_player'
+  | 'revive_player'
+  | 'set_poison'
+  | 'clear_poison'
+  | 'add_pending_death'
+  | 'remove_pending_death'
+  | 'modify_night_action'
+  | 'set_player_role';
+
+export interface StorytellerOverride {
+  type: OverrideType;
+  playerId?: string;
+  queuePosition?: number;
+  storytellerInput?: unknown;
+  roleId?: RoleId;
+  apparentRole?: RoleId;
+}
+
 export interface RoleMetadata {
   id: RoleId;
   name: string;

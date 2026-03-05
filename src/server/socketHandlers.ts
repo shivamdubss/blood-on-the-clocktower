@@ -1,6 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote, resolveExecution, transitionToNight, getNightPromptInfo, advanceNightQueue, revertNightQueueStep, commitNightActions, applyStorytellerOverride } from './gameStateMachine.js';
+import type { StorytellerOverride } from '../types/game.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -735,6 +736,63 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       socket.emit('night_action_reverted', {
         queuePosition: updatedGame.nightQueuePosition,
       });
+    });
+
+    socket.on('storyteller_override', (data: { gameId: string; override: StorytellerOverride }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('override_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('override_error', { message: 'Only the Storyteller can apply overrides' });
+        return;
+      }
+
+      // Overrides can only be applied during active game phases (not lobby or ended)
+      const { phase } = game;
+      if (phase === 'lobby' || phase === 'ended') {
+        socket.emit('override_error', { message: 'Cannot apply overrides in current phase' });
+        return;
+      }
+
+      const updatedGame = applyStorytellerOverride(game, data.override);
+
+      // If applyStorytellerOverride returned the same reference, the override was invalid
+      if (updatedGame === game) {
+        socket.emit('override_error', { message: 'Invalid override' });
+        return;
+      }
+
+      store.games.set(game.id, updatedGame);
+
+      socket.emit('override_applied', {
+        overrideType: data.override.type,
+        playerId: data.override.playerId,
+      });
+
+      // Send updated Grimoire to Storyteller
+      const grimoire = updatedGame.players.map((p) => {
+        const trueMeta = ROLE_MAP.get(p.trueRole);
+        const apparentMeta = ROLE_MAP.get(p.apparentRole);
+        return {
+          playerId: p.id,
+          playerName: p.name,
+          trueRole: trueMeta ? { id: trueMeta.id, name: trueMeta.name, team: trueMeta.team, ability: trueMeta.ability } : null,
+          apparentRole: apparentMeta ? { id: apparentMeta.id, name: apparentMeta.name, team: apparentMeta.team, ability: apparentMeta.ability } : null,
+          isAlive: p.isAlive,
+          isPoisoned: p.isPoisoned,
+          isDrunk: p.isDrunk,
+        };
+      });
+      socket.emit('grimoire', {
+        players: grimoire,
+        fortuneTellerRedHerringId: updatedGame.fortuneTellerRedHerringId,
+      });
+
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
     });
 
     socket.on('disconnect', () => {

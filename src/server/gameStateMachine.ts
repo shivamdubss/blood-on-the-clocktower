@@ -1,4 +1,4 @@
-import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo, StorytellerOverride } from '../types/game.js';
 import type { AbilityContext, AbilityResult } from '../types/ability.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 import { NIGHT_1_ORDER, NIGHT_OTHER_ORDER } from '../data/nightOrder.js';
@@ -419,11 +419,103 @@ export function transitionToNight(state: GameState): GameState {
   };
 }
 
-export function applyStorytellOverride(
+export function applyStorytellerOverride(
   state: GameState,
-  override: Partial<GameState>
+  override: StorytellerOverride
 ): GameState {
-  return { ...state, ...override };
+  let newState = state;
+
+  switch (override.type) {
+    case 'kill_player': {
+      if (!override.playerId) return state;
+      newState = killPlayer(state, override.playerId);
+      break;
+    }
+    case 'revive_player': {
+      if (!override.playerId) return state;
+      newState = {
+        ...state,
+        players: state.players.map((p) =>
+          p.id === override.playerId ? { ...p, isAlive: true } : p
+        ),
+      };
+      break;
+    }
+    case 'set_poison': {
+      if (!override.playerId) return state;
+      newState = poisonPlayer(state, override.playerId);
+      break;
+    }
+    case 'clear_poison': {
+      if (!override.playerId) return state;
+      newState = {
+        ...state,
+        players: state.players.map((p) =>
+          p.id === override.playerId ? { ...p, isPoisoned: false } : p
+        ),
+      };
+      break;
+    }
+    case 'add_pending_death': {
+      if (!override.playerId) return state;
+      newState = addPendingDeath(state, override.playerId);
+      break;
+    }
+    case 'remove_pending_death': {
+      if (!override.playerId) return state;
+      newState = {
+        ...state,
+        pendingDeaths: state.pendingDeaths.filter((id) => id !== override.playerId),
+      };
+      break;
+    }
+    case 'modify_night_action': {
+      if (override.queuePosition === undefined) return state;
+      const pos = override.queuePosition;
+      if (pos < 0 || pos >= state.nightQueue.length) return state;
+      newState = {
+        ...state,
+        nightQueue: state.nightQueue.map((entry, i) =>
+          i === pos ? { ...entry, storytellerInput: override.storytellerInput } : entry
+        ),
+      };
+      break;
+    }
+    case 'set_player_role': {
+      if (!override.playerId || !override.roleId) return state;
+      newState = {
+        ...state,
+        players: state.players.map((p) =>
+          p.id === override.playerId
+            ? {
+                ...p,
+                trueRole: override.roleId!,
+                apparentRole: override.apparentRole ?? override.roleId!,
+              }
+            : p
+        ),
+      };
+      break;
+    }
+    default:
+      return state;
+  }
+
+  return {
+    ...newState,
+    gameLog: [
+      ...newState.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'storyteller_override',
+        data: {
+          overrideType: override.type,
+          playerId: override.playerId,
+          queuePosition: override.queuePosition,
+        },
+      },
+    ],
+  };
 }
 
 export function buildAbilityContext(state: GameState, playerId: string, nightNumber: number): AbilityContext {
