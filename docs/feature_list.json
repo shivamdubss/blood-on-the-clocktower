@@ -375,7 +375,7 @@
     "human_review": [
       "Verify Grimoire layout is usable during fast-paced gameplay"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "WIN-01",
@@ -757,7 +757,7 @@
       "test:unit -- --grep 'Spy grimoire'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "ABILITY-SCARLET-WOMAN",

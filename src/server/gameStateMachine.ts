@@ -1,4 +1,4 @@
-import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo, StorytellerOverride } from '../types/game.js';
+import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination, NightQueueEntry, NightPromptInfo, StorytellerOverride, GrimoireData } from '../types/game.js';
 import type { AbilityContext, AbilityResult } from '../types/ability.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 import { NIGHT_1_ORDER, NIGHT_OTHER_ORDER } from '../data/nightOrder.js';
@@ -546,6 +546,25 @@ export function buildAbilityContext(state: GameState, playerId: string, nightNum
   };
 }
 
+export function buildGrimoireData(state: GameState): GrimoireData {
+  return {
+    players: state.players.map((p) => {
+      const trueMeta = ROLE_MAP.get(p.trueRole);
+      const apparentMeta = ROLE_MAP.get(p.apparentRole);
+      return {
+        playerId: p.id,
+        playerName: p.name,
+        trueRole: trueMeta ? { id: trueMeta.id, name: trueMeta.name, team: trueMeta.team, ability: trueMeta.ability } : null,
+        apparentRole: apparentMeta ? { id: apparentMeta.id, name: apparentMeta.name, team: apparentMeta.team, ability: apparentMeta.ability } : null,
+        isAlive: p.isAlive,
+        isPoisoned: p.isPoisoned,
+        isDrunk: p.isDrunk,
+      };
+    }),
+    fortuneTellerRedHerringId: state.fortuneTellerRedHerringId,
+  };
+}
+
 export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
   const { nightQueue, nightQueuePosition } = state;
   if (nightQueuePosition >= nightQueue.length) return null;
@@ -567,7 +586,7 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
     promptDescription += ` ⚠ THIS PLAYER IS THE DRUNK — provide false information.`;
   }
 
-  return {
+  const prompt: NightPromptInfo = {
     queuePosition: nightQueuePosition,
     totalInQueue: nightQueue.length,
     roleId: entry.roleId,
@@ -580,6 +599,13 @@ export function getNightPromptInfo(state: GameState): NightPromptInfo | null {
     promptType,
     promptDescription,
   };
+
+  // Include grimoire data for the Spy's night prompt
+  if (entry.roleId === 'spy') {
+    prompt.grimoireData = buildGrimoireData(state);
+  }
+
+  return prompt;
 }
 
 function getRolePromptType(roleId: RoleId): NightPromptInfo['promptType'] {
@@ -611,7 +637,7 @@ function getRolePromptDescription(roleId: RoleId, playerName: string): string {
     case 'poisoner':
       return `Choose a player for ${playerName} (Poisoner) to poison tonight.`;
     case 'spy':
-      return `${playerName} (Spy) may see the Grimoire. Confirm to proceed.`;
+      return `${playerName} (Spy) may see the Grimoire. Show them the Grimoire info below. The Spy may register as Good or as a Townsfolk/Outsider to detection abilities.`;
     case 'washerwoman':
       return `Choose 2 players and a Townsfolk role to show ${playerName} (Washerwoman).`;
     case 'librarian':

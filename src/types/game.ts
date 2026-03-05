@@ -60,6 +60,21 @@ export interface NightQueueEntry {
   storytellerInput?: unknown;
 }
 
+export interface GrimoirePlayerInfo {
+  playerId: string;
+  playerName: string;
+  trueRole: { id: RoleId; name: string; team: string; ability: string } | null;
+  apparentRole: { id: RoleId; name: string; team: string; ability: string } | null;
+  isAlive: boolean;
+  isPoisoned: boolean;
+  isDrunk: boolean;
+}
+
+export interface GrimoireData {
+  players: GrimoirePlayerInfo[];
+  fortuneTellerRedHerringId: string | null;
+}
+
 export interface NightPromptInfo {
   queuePosition: number;
   totalInQueue: number;
@@ -72,6 +87,7 @@ export interface NightPromptInfo {
   isPoisoned: boolean;
   promptType: 'choose_player' | 'choose_two_players' | 'provide_number' | 'choose_players_and_role' | 'info_only';
   promptDescription: string;
+  grimoireData?: GrimoireData;
 }
 
 export interface GameState {
