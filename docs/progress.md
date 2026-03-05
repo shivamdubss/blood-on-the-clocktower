@@ -2,11 +2,27 @@
 
 ## Current State
 - **Current Milestone:** Milestone 8 (Win Conditions + Grimoire + UI + Full Game)
-- **Features Completed:** 45 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR, ABILITY-BUTLER, ABILITY-RECLUSE, ABILITY-SAINT, EDGE-03, UI-01)
-- **Last Known Working State:** All tests passing (626 unit, 21 e2e)
-- **Last Session:** Session 42
+- **Features Completed:** 47 / 47 (ALL FEATURES COMPLETE)
+- **Last Known Working State:** All tests passing (626 unit, 27 e2e)
+- **Last Session:** Session 43
 
 ## Session Log
+
+### Session 43 -- UI-02 + E2E-01
+- Marked UI-02 as passing: SeatingCircle component and seatIndex assignment already fully implemented
+  - `SeatingCircle.tsx` renders players in a circle via CSS positioning
+  - `seatIndex` assigned at join time in `socketHandlers.ts:77`
+  - 3 existing e2e tests verify seatIndex assignment, dead player marking, and adjacency
+- Implemented E2E-01: Full 7-player Trouble Brewing game e2e test
+  - 3 new e2e tests in `fullGame.spec.ts`:
+    1. "7-player Trouble Brewing game completes start to finish" — creates game, joins 7 players, receives roles, transitions through setup → day, nominates and executes the Demon, verifies Good wins with role reveal
+    2. "night abilities fire in correct order and produce output" — plays through setup → day → night → end night, verifies night queue processes sequentially and dawn announcement fires
+    3. "game ends with no console errors during full cycle" — plays 2 full day/night cycles ending with Demon execution
+  - Tests handle random role assignment by reading the Grimoire to identify the Demon and Scarlet Woman
+  - Scarlet Woman is poisoned via Storyteller override to prevent trigger on Demon execution
+  - All 626 unit + 27 e2e tests passing
+- MILESTONE 8 COMPLETE
+- ALL MILESTONES COMPLETE
 
 ### Session 41 -- EDGE-03
 - Marked EDGE-03 as passing: Virgin + Drunk nominator edge case

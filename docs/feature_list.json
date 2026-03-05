@@ -960,6 +960,6 @@
     "human_review": [
       "Play through a full game manually to verify overall experience"
     ],
-    "passes": false
+    "passes": true
   }
 ]
