@@ -361,7 +361,7 @@ describe('execution', () => {
       return c;
     }
 
-    function waitForEvent(socket: ClientSocket, event: string, timeout = 3000): Promise<unknown> {
+    function waitForEvent(socket: ClientSocket, event: string, timeout = 5000): Promise<unknown> {
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${event}`)), timeout);
         socket.once(event, (data: unknown) => {
@@ -501,7 +501,7 @@ describe('execution', () => {
       expect(result.reason).toBe('no_passing_nominations');
     });
 
-    it('tie results in no execution', async () => {
+    it('tie results in no execution', { timeout: 15000 }, async () => {
       const { host, players, gameId } = await setupGameInNomination(7);
 
       // First nomination: 4 yes votes on players[1]

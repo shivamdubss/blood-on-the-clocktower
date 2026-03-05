@@ -3,6 +3,7 @@ import { useStore } from '../store.js';
 import { RoleCard } from './RoleCard.js';
 import { PhaseIndicator } from './PhaseIndicator.js';
 import { PlayerList } from './PlayerList.js';
+import { SeatingCircle } from './SeatingCircle.js';
 import { VoteUI } from './VoteUI.js';
 
 export function GameView(): React.ReactElement {
@@ -66,6 +67,8 @@ export function GameView(): React.ReactElement {
             </div>
           </div>
         )}
+
+        <SeatingCircle players={gameState.players} currentPlayerId={playerId} />
 
         <PlayerList players={gameState.players} currentPlayerId={playerId} />
       </div>

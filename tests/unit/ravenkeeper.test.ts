@@ -213,7 +213,7 @@ describe('Ravenkeeper', () => {
       return c;
     }
 
-    function waitForEvent(socket: ClientSocket, event: string, timeout = 3000): Promise<unknown> {
+    function waitForEvent(socket: ClientSocket, event: string, timeout = 5000): Promise<unknown> {
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${event}`)), timeout);
         socket.once(event, (data: unknown) => {

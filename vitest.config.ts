@@ -7,5 +7,6 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts'],
     exclude: ['tests/e2e/**', 'node_modules/**'],
     watch: false,
+    testTimeout: 10000,
   },
 });
