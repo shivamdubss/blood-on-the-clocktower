@@ -1,12 +1,21 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 3 (Day Phase) -- COMPLETE
-- **Features Completed:** 17 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06)
-- **Last Known Working State:** All tests passing (165 unit, 16 e2e)
-- **Last Session:** Session 16
+- **Current Milestone:** Milestone 4 (Night Phase Infrastructure + Ability Context)
+- **Features Completed:** 18 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01)
+- **Last Known Working State:** All tests passing (184 unit, 16 e2e)
+- **Last Session:** Session 17
 
 ## Session Log
+
+### Session 17 -- ARCH-01
+- Implemented ARCH-01: Ability execution context with isPoisoned and isDrunk flags
+- Added `buildAbilityContext()` to `gameStateMachine.ts`: constructs AbilityContext for a player, reading isPoisoned from player state and isDrunk from player.isDrunk
+- Added `resolveAbility()` to `gameStateMachine.ts`: executes an ability handler with the correct context, applies stateMutation on success, and logs the resolution with corruption state
+- AbilityContext type already existed in `src/types/ability.ts` with isPoisoned, isDrunk, gameState, player, nightNumber, and storytellerOverride fields
+- All 22 role files already had stub `abilityHandler` functions accepting AbilityContext
+- 19 new unit tests in `abilityContext.test.ts`: context construction, poisoned/drunk flag propagation, corrupted output verification, stateMutation application, error handling
+- All 184 unit + 16 e2e tests passing
 
 ### Session 16 -- DAY-06
 - Implemented DAY-06: Storyteller can end the day and transition to night phase

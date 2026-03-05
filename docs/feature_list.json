@@ -281,7 +281,7 @@
       "test:unit -- --grep 'drunk ability'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "NIGHT-01",

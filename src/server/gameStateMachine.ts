@@ -1,4 +1,5 @@
 import type { GameState, Player, Phase, DaySubPhase, RoleId, Nomination } from '../types/game.js';
+import type { AbilityContext, AbilityResult } from '../types/ability.js';
 import { assignRoles as computeRoleAssignments } from './roleDistribution.js';
 
 export function createInitialGameState(id: string, joinCode: string, storytellerId: string, hostSecret?: string): GameState {
@@ -396,4 +397,64 @@ export function applyStorytellOverride(
   override: Partial<GameState>
 ): GameState {
   return { ...state, ...override };
+}
+
+export function buildAbilityContext(state: GameState, playerId: string, nightNumber: number): AbilityContext {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) {
+    throw new Error(`Player ${playerId} not found`);
+  }
+
+  // isPoisoned: set if the player has the isPoisoned flag on their state
+  // (set by the Poisoner's night action via poisonPlayer())
+  const isPoisoned = player.isPoisoned;
+
+  // isDrunk: set if the player's true role is 'drunk'
+  const isDrunk = player.isDrunk;
+
+  return {
+    gameState: state,
+    player,
+    isPoisoned,
+    isDrunk,
+    nightNumber,
+  };
+}
+
+export async function resolveAbility(
+  state: GameState,
+  playerId: string,
+  nightNumber: number,
+  handler: (context: AbilityContext, input?: unknown) => AbilityResult | Promise<AbilityResult>,
+  input?: unknown
+): Promise<{ state: GameState; result: AbilityResult }> {
+  const context = buildAbilityContext(state, playerId, nightNumber);
+  const result = await handler(context, input);
+
+  let newState = state;
+  if (result.success && result.stateMutation) {
+    newState = { ...state, ...result.stateMutation };
+  }
+
+  // Log the ability resolution
+  newState = {
+    ...newState,
+    gameLog: [
+      ...newState.gameLog,
+      {
+        timestamp: Date.now(),
+        type: 'ability_resolved',
+        data: {
+          playerId,
+          roleId: context.player.trueRole,
+          nightNumber,
+          isPoisoned: context.isPoisoned,
+          isDrunk: context.isDrunk,
+          success: result.success,
+        },
+      },
+    ],
+  };
+
+  return { state: newState, result };
 }
