@@ -140,7 +140,10 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
             isDrunk: p.isDrunk,
           };
         });
-        io.to(updatedGame.storytellerId).emit('grimoire', { players: grimoire });
+        io.to(updatedGame.storytellerId).emit('grimoire', {
+          players: grimoire,
+          fortuneTellerRedHerringId: updatedGame.fortuneTellerRedHerringId,
+        });
       }
 
       // Broadcast sanitized game state (no role info leaked to players)

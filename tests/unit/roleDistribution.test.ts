@@ -34,7 +34,7 @@ describe('role distribution', () => {
   it('each player receives exactly one role for every player count', () => {
     for (let count = 5; count <= 15; count++) {
       const playerIds = Array.from({ length: count }, (_, i) => `player-${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
 
       expect(assignments.length).toBe(count);
 
@@ -61,7 +61,7 @@ describe('role distribution', () => {
   it('Townsfolk, Outsider, Minion, and Demon counts match the table for every player count (with Baron adjustment)', () => {
     for (let count = 5; count <= 15; count++) {
       const playerIds = Array.from({ length: count }, (_, i) => `player-${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
       const dist = DISTRIBUTION_TABLE[count];
 
       const typeCounts = { townsfolk: 0, outsider: 0, minion: 0, demon: 0 };
@@ -84,7 +84,7 @@ describe('role distribution', () => {
   it('random assignment does not repeat roles within a single game', () => {
     for (let count = 5; count <= 15; count++) {
       const playerIds = Array.from({ length: count }, (_, i) => `player-${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
       const roles = assignments.map((a) => a.role);
       expect(new Set(roles).size).toBe(roles.length);
     }
@@ -94,7 +94,7 @@ describe('role distribution', () => {
 describe('role assignment', () => {
   it('assignRoles assigns roles to the provided player IDs', () => {
     const playerIds = ['a', 'b', 'c', 'd', 'e'];
-    const assignments = assignRoles(playerIds);
+    const { assignments } = assignRoles(playerIds);
 
     expect(assignments.length).toBe(5);
     expect(assignments.map((a) => a.playerId)).toEqual(playerIds);
@@ -113,7 +113,7 @@ describe('role assignment', () => {
     const results = new Set<string>();
     // Run 10 times and check we get at least 2 different assignments
     for (let i = 0; i < 10; i++) {
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
       results.add(assignments.map((a) => a.role).join(','));
     }
     expect(results.size).toBeGreaterThan(1);

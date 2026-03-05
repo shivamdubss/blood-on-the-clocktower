@@ -23,7 +23,7 @@ describe('Drunk assignment', () => {
     // Run multiple times since role assignment is random
     for (let trial = 0; trial < 50; trial++) {
       const playerIds = Array.from({ length: 9 }, (_, i) => `p${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
       const drunkAssignment = assignments.find((a) => a.role === 'drunk');
       if (!drunkAssignment) continue; // Drunk may not be in every game
 
@@ -106,7 +106,7 @@ describe('Drunk assignment', () => {
   it('non-Drunk players have apparentRole equal to their true role', () => {
     for (let trial = 0; trial < 20; trial++) {
       const playerIds = Array.from({ length: 7 }, (_, i) => `p${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
 
       for (const a of assignments) {
         if (a.role !== 'drunk') {
@@ -121,7 +121,7 @@ describe('Drunk apparent role', () => {
   it('apparent role is always a Townsfolk not in the assigned townsfolk pool', () => {
     for (let trial = 0; trial < 50; trial++) {
       const playerIds = Array.from({ length: 7 }, (_, i) => `p${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
       const drunkAssignment = assignments.find((a) => a.role === 'drunk');
       if (!drunkAssignment) continue;
 

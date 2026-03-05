@@ -31,7 +31,7 @@ describe('Baron adjustment', () => {
     let foundBaronGame = false;
     for (let attempt = 0; attempt < 100 && !foundBaronGame; attempt++) {
       const playerIds = Array.from({ length: 7 }, (_, i) => `player-${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
 
       const hasBaron = assignments.some((a) => a.role === 'baron');
       if (!hasBaron) continue;
@@ -67,7 +67,7 @@ describe('Baron adjustment', () => {
     for (let attempt = 0; attempt < 50; attempt++) {
       const count = 7;
       const playerIds = Array.from({ length: count }, (_, i) => `player-${i}`);
-      const assignments = assignRoles(playerIds);
+      const { assignments } = assignRoles(playerIds);
 
       const hasBaron = assignments.some((a) => a.role === 'baron');
       const typeCounts: Record<RoleType, number> = { townsfolk: 0, outsider: 0, minion: 0, demon: 0 };

@@ -46,6 +46,11 @@ export interface RoleAssignment {
   apparentRole: RoleId;
 }
 
+export interface RoleAssignmentResult {
+  assignments: RoleAssignment[];
+  fortuneTellerRedHerringId: string | null;
+}
+
 /**
  * Applies Baron adjustment: if Baron is among the selected minions,
  * shift 2 Townsfolk slots to Outsider slots.
@@ -64,7 +69,7 @@ export function applyBaronAdjustment(dist: Record<RoleType, number>, minions: Ro
  * Assigns roles to players according to the Trouble Brewing distribution table.
  * Returns an array of { playerId, role } assignments.
  */
-export function assignRoles(playerIds: string[], playerCount?: number): RoleAssignment[] {
+export function assignRoles(playerIds: string[], playerCount?: number): RoleAssignmentResult {
   const count = playerCount ?? playerIds.length;
   const dist = DISTRIBUTION_TABLE[count];
   if (!dist) {
@@ -93,11 +98,24 @@ export function assignRoles(playerIds: string[], playerCount?: number): RoleAssi
     ? shuffle(TOWNSFOLK_ROLES.filter((r) => !assignedTownsfolk.has(r)))[0]
     : undefined;
 
-  return playerIds.map((id, i) => ({
+  const assignments = playerIds.map((id, i) => ({
     playerId: id,
     role: allRoles[i],
     apparentRole: allRoles[i] === 'drunk' && drunkApparentRole ? drunkApparentRole : allRoles[i],
   }));
+
+  // Assign Fortune Teller red herring: a random Good player (not the Fortune Teller themselves)
+  let fortuneTellerRedHerringId: string | null = null;
+  if (allRoles.includes('fortuneTeller')) {
+    const goodPlayers = assignments.filter(
+      (a) => a.role !== 'fortuneTeller' && (TOWNSFOLK_ROLES.includes(a.role) || OUTSIDER_ROLES.includes(a.role))
+    );
+    if (goodPlayers.length > 0) {
+      fortuneTellerRedHerringId = shuffle(goodPlayers)[0].playerId;
+    }
+  }
+
+  return { assignments, fortuneTellerRedHerringId };
 }
 
 /** Get the team type for a given role */

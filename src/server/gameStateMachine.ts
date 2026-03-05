@@ -114,14 +114,21 @@ export function setStoryteller(state: GameState, storytellerId: string): GameSta
   };
 }
 
-export function assignAllRoles(state: GameState): GameState {
-  const playerIds = state.players.map((p) => p.id);
-  const assignments = computeRoleAssignments(playerIds);
-
+export function setFortuneTellerRedHerring(state: GameState, playerId: string | null): GameState {
   return {
     ...state,
+    fortuneTellerRedHerringId: playerId,
+  };
+}
+
+export function assignAllRoles(state: GameState): GameState {
+  const playerIds = state.players.map((p) => p.id);
+  const result = computeRoleAssignments(playerIds);
+
+  let newState: GameState = {
+    ...state,
     players: state.players.map((p) => {
-      const assignment = assignments.find((a) => a.playerId === p.id);
+      const assignment = result.assignments.find((a) => a.playerId === p.id);
       if (!assignment) return p;
       return {
         ...p,
@@ -131,6 +138,12 @@ export function assignAllRoles(state: GameState): GameState {
       };
     }),
   };
+
+  if (result.fortuneTellerRedHerringId) {
+    newState = setFortuneTellerRedHerring(newState, result.fortuneTellerRedHerringId);
+  }
+
+  return newState;
 }
 
 export function applyStorytellOverride(

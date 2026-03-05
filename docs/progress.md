@@ -2,11 +2,21 @@
 
 ## Current State
 - **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
-- **Features Completed:** 9 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02)
-- **Last Known Working State:** All tests passing (67 unit, 16 e2e)
-- **Last Session:** Session 8
+- **Features Completed:** 10 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03)
+- **Last Known Working State:** All tests passing (73 unit, 16 e2e)
+- **Last Session:** Session 9
 
 ## Session Log
+
+### Session 9 -- SETUP-03
+- Implemented SETUP-03: Fortune Teller red herring is assigned at game start
+- Changed `assignRoles()` return type to `RoleAssignmentResult` containing both `assignments` array and `fortuneTellerRedHerringId`
+- When Fortune Teller is in the game, a random Good player (not the Fortune Teller) is picked as the red herring
+- Added `setFortuneTellerRedHerring()` to gameStateMachine.ts; wired into `assignAllRoles()`
+- Red herring ID included in Grimoire data sent to Storyteller
+- Updated existing tests (roleDistribution, drunkAssignment, baronAdjustment) to destructure new return type
+- 6 new unit tests in `redHerring.test.ts`: red herring is Good, stored in state, visible in Grimoire, persists after player death
+- All 73 unit + 16 e2e tests passing
 
 ### Session 8 -- SETUP-02
 - Implemented SETUP-02: Drunk is assigned an apparent Townsfolk role not otherwise in the game
