@@ -16,6 +16,7 @@ export function createInitialGameState(id: string, joinCode: string, storyteller
     executedPlayerId: null,
     monkProtectedPlayerId: null,
     fortuneTellerRedHerringId: null,
+    demonBluffRoles: [],
     slayerAbilityUsed: false,
     virginAbilityUsed: false,
     pendingDeaths: [],
@@ -141,6 +142,10 @@ export function assignAllRoles(state: GameState): GameState {
 
   if (result.fortuneTellerRedHerringId) {
     newState = setFortuneTellerRedHerring(newState, result.fortuneTellerRedHerringId);
+  }
+
+  if (result.bluffRoles.length > 0) {
+    newState = { ...newState, demonBluffRoles: result.bluffRoles };
   }
 
   return newState;

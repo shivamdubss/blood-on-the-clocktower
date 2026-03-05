@@ -1,12 +1,23 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
-- **Features Completed:** 10 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03)
-- **Last Known Working State:** All tests passing (73 unit, 16 e2e)
-- **Last Session:** Session 9
+- **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- COMPLETE
+- **Features Completed:** 11 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04)
+- **Last Known Working State:** All tests passing (80 unit, 16 e2e)
+- **Last Session:** Session 10
 
 ## Session Log
+
+### Session 10 -- SETUP-04
+- Implemented SETUP-04: Minion and Demon info exchange on Night 1
+- Minions receive `minion_info` WebSocket event with other Minions' identities and the Demon's identity
+- Demon receives `demon_info` WebSocket event with Minion identities and 3 bluff roles (not-in-play Townsfolk)
+- Extended `RoleAssignmentResult` to include `bluffRoles` array
+- Added `demonBluffRoles` field to `GameState`; sanitized from broadcast `game_state`
+- Bluff roles exclude Drunk's apparent role (since a player claims that role)
+- 7 new unit tests in `minionDemonInfo.test.ts`: Minion info delivery, Demon info delivery, bluff role validity, correct-player-only delivery
+- All 80 unit + 16 e2e tests passing
+- MILESTONE 2 COMPLETE
 
 ### Session 9 -- SETUP-03
 - Implemented SETUP-03: Fortune Teller red herring is assigned at game start

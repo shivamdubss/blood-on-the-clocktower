@@ -21,6 +21,7 @@ function sanitizeGameStateForPlayer(state: GameState): GameState {
   return {
     ...state,
     hostSecret: '',
+    demonBluffRoles: [],
     players: state.players.map((p) => ({
       ...p,
       trueRole: 'washerwoman' as const,
@@ -143,6 +144,36 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         io.to(updatedGame.storytellerId).emit('grimoire', {
           players: grimoire,
           fortuneTellerRedHerringId: updatedGame.fortuneTellerRedHerringId,
+        });
+      }
+
+      // Send Minion info: each Minion learns other Minions and the Demon
+      const minions = updatedGame.players.filter((p) => {
+        const meta = ROLE_MAP.get(p.trueRole);
+        return meta && meta.type === 'minion';
+      });
+      const demons = updatedGame.players.filter((p) => {
+        const meta = ROLE_MAP.get(p.trueRole);
+        return meta && meta.type === 'demon';
+      });
+
+      for (const minion of minions) {
+        const otherMinions = minions
+          .filter((m) => m.id !== minion.id)
+          .map((m) => ({ playerId: m.id, playerName: m.name, role: m.trueRole }));
+        const demonInfo = demons.map((d) => ({ playerId: d.id, playerName: d.name, role: d.trueRole }));
+        io.to(minion.id).emit('minion_info', {
+          otherMinions,
+          demon: demonInfo,
+        });
+      }
+
+      // Send Demon info: Demon learns Minion identities and 3 bluff roles
+      for (const demon of demons) {
+        const minionInfo = minions.map((m) => ({ playerId: m.id, playerName: m.name, role: m.trueRole }));
+        io.to(demon.id).emit('demon_info', {
+          minions: minionInfo,
+          bluffRoles: updatedGame.demonBluffRoles,
         });
       }
 

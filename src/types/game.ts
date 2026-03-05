@@ -72,6 +72,7 @@ export interface GameState {
   executedPlayerId: string | null;
   monkProtectedPlayerId: string | null;
   fortuneTellerRedHerringId: string | null;
+  demonBluffRoles: RoleId[];
   slayerAbilityUsed: boolean;
   virginAbilityUsed: boolean;
   pendingDeaths: string[];

@@ -154,7 +154,7 @@
       "test:unit -- --grep 'bluff roles'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "DAY-01",

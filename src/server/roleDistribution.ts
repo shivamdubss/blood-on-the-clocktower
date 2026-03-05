@@ -49,6 +49,7 @@ export interface RoleAssignment {
 export interface RoleAssignmentResult {
   assignments: RoleAssignment[];
   fortuneTellerRedHerringId: string | null;
+  bluffRoles: RoleId[];
 }
 
 /**
@@ -115,7 +116,13 @@ export function assignRoles(playerIds: string[], playerCount?: number): RoleAssi
     }
   }
 
-  return { assignments, fortuneTellerRedHerringId };
+  // Compute 3 bluff roles for the Demon: Townsfolk not in play
+  const inPlayRoles = new Set(allRoles);
+  // Also exclude the Drunk's apparent role since it's "claimed" by a player
+  if (drunkApparentRole) inPlayRoles.add(drunkApparentRole);
+  const bluffRoles = shuffle(TOWNSFOLK_ROLES.filter((r) => !inPlayRoles.has(r))).slice(0, 3);
+
+  return { assignments, fortuneTellerRedHerringId, bluffRoles };
 }
 
 /** Get the team type for a given role */
