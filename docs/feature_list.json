@@ -922,7 +922,7 @@
     "human_review": [
       "Verify overall player UI is usable and clear"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "UI-02",
