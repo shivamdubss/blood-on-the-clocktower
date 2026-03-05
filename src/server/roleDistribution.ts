@@ -43,6 +43,7 @@ function shuffle<T>(arr: T[]): T[] {
 export interface RoleAssignment {
   playerId: string;
   role: RoleId;
+  apparentRole: RoleId;
 }
 
 /**
@@ -86,7 +87,17 @@ export function assignRoles(playerIds: string[], playerCount?: number): RoleAssi
     throw new Error(`Role count (${allRoles.length}) doesn't match player count (${playerIds.length})`);
   }
 
-  return playerIds.map((id, i) => ({ playerId: id, role: allRoles[i] }));
+  // Compute Drunk's apparent Townsfolk role: a Townsfolk not assigned to any player
+  const assignedTownsfolk = new Set(townsfolk);
+  const drunkApparentRole = allRoles.includes('drunk')
+    ? shuffle(TOWNSFOLK_ROLES.filter((r) => !assignedTownsfolk.has(r)))[0]
+    : undefined;
+
+  return playerIds.map((id, i) => ({
+    playerId: id,
+    role: allRoles[i],
+    apparentRole: allRoles[i] === 'drunk' && drunkApparentRole ? drunkApparentRole : allRoles[i],
+  }));
 }
 
 /** Get the team type for a given role */

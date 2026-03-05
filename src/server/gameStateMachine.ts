@@ -123,12 +123,11 @@ export function assignAllRoles(state: GameState): GameState {
     players: state.players.map((p) => {
       const assignment = assignments.find((a) => a.playerId === p.id);
       if (!assignment) return p;
-      const role = assignment.role;
       return {
         ...p,
-        trueRole: role,
-        apparentRole: role,
-        isDrunk: role === 'drunk',
+        trueRole: assignment.role,
+        apparentRole: assignment.apparentRole,
+        isDrunk: assignment.role === 'drunk',
       };
     }),
   };
