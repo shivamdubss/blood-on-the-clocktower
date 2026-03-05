@@ -1,12 +1,23 @@
 # BotC -- Progress Log
 
 ## Current State
-- **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 39 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER)
-- **Last Known Working State:** All tests passing (563 unit, 16 e2e)
-- **Last Session:** Session 36
+- **Current Milestone:** Milestone 7 (Outsider Abilities + Edge Cases)
+- **Features Completed:** 40 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER, ABILITY-UNDERTAKER, ABILITY-MONK, ABILITY-RAVENKEEPER, ABILITY-SLAYER, ABILITY-SOLDIER, ABILITY-MAYOR)
+- **Last Known Working State:** All tests passing (576 unit, 16 e2e)
+- **Last Session:** Session 37
 
 ## Session Log
+
+### Session 37 -- ABILITY-MAYOR
+- Marked ABILITY-MAYOR as passing: both abilities (3-player win + bounce kill) were already implemented in prior sessions
+- `checkMayorWin()` in `gameStateMachine.ts` (line 115-122): checks 3 alive players, no executedPlayerId, Mayor alive and not poisoned → Good wins
+- Mayor bounce in `processImpAction()` (line 956-973): if Imp targets Mayor (not poisoned) and Storyteller provides `mayorRedirectPlayerId`, kill redirects to that player
+- `end_day` socket handler calls `checkMayorWin` before `transitionToNight`, emits `game_over` if Mayor win triggers
+- Mayor is passive (firstNight: false, otherNights: false) — no night action needed
+- 13 new tests in `mayor.test.ts`: 7 state machine tests (3-player win, no execution check, >3 players, dead Mayor, poisoned Mayor, bounce redirect, bounce poisoned, no redirect, passive metadata, purity) + 3 WebSocket tests (game_over on Mayor win, poisoned no win, bounce via night queue)
+- All 576 unit + 16 e2e tests passing
+- MILESTONE 6 COMPLETE
+- Next milestone: Milestone 7 (Outsider Abilities + Edge Cases): ABILITY-BUTLER, ABILITY-RECLUSE, ABILITY-SAINT, EDGE-03
 
 ### Session 36 -- ABILITY-SLAYER + ABILITY-SOLDIER
 - Marked ABILITY-SLAYER as passing: implementation was already complete from prior sessions (processSlayerAction in gameStateMachine.ts, slayer_action socket handler in socketHandlers.ts)
