@@ -32,7 +32,7 @@
       "test:e2e -- --grep 'join lobby'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "LOBBY-03",
