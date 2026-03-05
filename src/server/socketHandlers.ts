@@ -666,6 +666,23 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
       const updatedGame = advanceNightQueue(processedGame, data.input);
       store.games.set(game.id, updatedGame);
 
+      // Send night info to info-receiving roles
+      const INFO_ROLES = ['washerwoman', 'librarian', 'investigator', 'chef', 'empath', 'fortuneTeller', 'undertaker', 'ravenkeeper'];
+      if (INFO_ROLES.includes(currentEntry.roleId) && data.input) {
+        const infoInput = data.input as Record<string, unknown>;
+        // Resolve player names for the info display
+        const nightInfo: Record<string, unknown> = { roleId: currentEntry.roleId, ...infoInput };
+        if (infoInput.player1Id) {
+          const p1 = updatedGame.players.find((p) => p.id === infoInput.player1Id);
+          if (p1) nightInfo.player1Name = p1.name;
+        }
+        if (infoInput.player2Id) {
+          const p2 = updatedGame.players.find((p) => p.id === infoInput.player2Id);
+          if (p2) nightInfo.player2Name = p2.name;
+        }
+        io.to(currentEntry.playerId).emit('night_info', nightInfo);
+      }
+
       // Send confirmation of the completed action
       const completedEntry = game.nightQueue[game.nightQueuePosition];
       socket.emit('night_action_confirmed', {
