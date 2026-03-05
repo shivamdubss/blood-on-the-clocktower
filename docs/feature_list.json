@@ -227,7 +227,7 @@
       "test:e2e -- --grep 'vote'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "DAY-05",

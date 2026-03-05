@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { GameState, Player } from '../types/game.js';
-import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations } from './gameStateMachine.js';
+import { addPlayer, removePlayer, transitionPhase, setStoryteller, assignAllRoles, resolveDawnDeaths, transitionDaySubPhase, addNomination, clearNominations, startVote, recordVote, resolveVote } from './gameStateMachine.js';
 import { ROLE_MAP } from '../data/roles.js';
 
 export interface GameStore {
@@ -378,7 +378,11 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         return;
       }
 
-      const updatedGame = addNomination(game, socket.id, data.nomineeId);
+      let updatedGame = addNomination(game, socket.id, data.nomineeId);
+      const nominationIndex = updatedGame.nominations.length - 1;
+
+      // Automatically start a vote on this nomination
+      updatedGame = startVote(updatedGame, nominationIndex);
       store.games.set(game.id, updatedGame);
 
       const nominatorName = nominator.name;
@@ -390,7 +394,124 @@ export function registerSocketHandlers(io: Server, store: GameStore): void {
         nomineeId: data.nomineeId,
         nomineeName,
       });
+      io.to(game.id).emit('vote_started', {
+        nominationIndex,
+        nomineeId: data.nomineeId,
+        nomineeName,
+        nominatorId: socket.id,
+        nominatorName,
+      });
       io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(updatedGame));
+    });
+
+    socket.on('submit_vote', (data: { gameId: string; vote: boolean }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('vote_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'vote') {
+        socket.emit('vote_error', { message: 'No vote is currently in progress' });
+        return;
+      }
+
+      const { activeNominationIndex } = game;
+      if (activeNominationIndex === null) {
+        socket.emit('vote_error', { message: 'No active nomination to vote on' });
+        return;
+      }
+
+      const player = game.players.find((p) => p.id === socket.id);
+      if (!player) {
+        socket.emit('vote_error', { message: 'You are not in this game' });
+        return;
+      }
+
+      // Dead players can only vote yes if they have a ghost vote
+      if (!player.isAlive) {
+        if (!data.vote) {
+          // Dead players abstaining is fine - just record submission
+        } else if (player.ghostVoteUsed) {
+          socket.emit('vote_error', { message: 'You have already used your ghost vote' });
+          return;
+        }
+      }
+
+      const nomination = game.nominations[activeNominationIndex];
+      if (nomination.votesSubmitted.includes(socket.id)) {
+        socket.emit('vote_error', { message: 'You have already voted' });
+        return;
+      }
+
+      const updatedGame = recordVote(game, activeNominationIndex, socket.id, data.vote);
+      store.games.set(game.id, updatedGame);
+
+      socket.emit('vote_recorded', { playerId: socket.id, vote: data.vote });
+
+      // Check if all eligible players have voted
+      const updatedNomination = updatedGame.nominations[activeNominationIndex];
+      const eligibleVoters = updatedGame.players.filter((p) => {
+        if (p.isAlive) return true;
+        const originalPlayer = game.players.find((gp) => gp.id === p.id);
+        return originalPlayer && !originalPlayer.ghostVoteUsed;
+      });
+      const allVoted = eligibleVoters.every((p) => updatedNomination.votesSubmitted.includes(p.id));
+
+      if (allVoted) {
+        // Auto-reveal when all votes are in
+        const resolved = resolveVote(updatedGame, activeNominationIndex);
+        store.games.set(game.id, resolved);
+
+        const resolvedNomination = resolved.nominations[activeNominationIndex];
+        io.to(game.id).emit('vote_result', {
+          nominationIndex: activeNominationIndex,
+          votes: resolvedNomination.votes,
+          voteCount: resolvedNomination.voteCount,
+          passed: resolvedNomination.passed,
+          threshold: Math.ceil(resolved.players.filter((p) => p.isAlive).length / 2),
+        });
+        io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(resolved));
+      }
+    });
+
+    socket.on('reveal_votes', (data: { gameId: string }) => {
+      const game = store.games.get(data.gameId);
+
+      if (!game) {
+        socket.emit('vote_error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.storytellerId !== socket.id) {
+        socket.emit('vote_error', { message: 'Only the Storyteller can reveal votes' });
+        return;
+      }
+
+      if (game.phase !== 'day' || game.daySubPhase !== 'vote') {
+        socket.emit('vote_error', { message: 'No vote is currently in progress' });
+        return;
+      }
+
+      const { activeNominationIndex } = game;
+      if (activeNominationIndex === null) {
+        socket.emit('vote_error', { message: 'No active nomination' });
+        return;
+      }
+
+      const resolved = resolveVote(game, activeNominationIndex);
+      store.games.set(game.id, resolved);
+
+      const resolvedNomination = resolved.nominations[activeNominationIndex];
+      io.to(game.id).emit('vote_result', {
+        nominationIndex: activeNominationIndex,
+        votes: resolvedNomination.votes,
+        voteCount: resolvedNomination.voteCount,
+        passed: resolvedNomination.passed,
+        threshold: Math.ceil(resolved.players.filter((p) => p.isAlive).length / 2),
+      });
+      io.to(game.id).emit('game_state', sanitizeGameStateForPlayer(resolved));
     });
 
     socket.on('disconnect', () => {

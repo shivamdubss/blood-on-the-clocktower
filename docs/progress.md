@@ -2,11 +2,27 @@
 
 ## Current State
 - **Current Milestone:** Milestone 3 (Day Phase) -- In Progress
-- **Features Completed:** 14 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03)
-- **Last Known Working State:** All tests passing (116 unit, 16 e2e)
-- **Last Session:** Session 13
+- **Features Completed:** 15 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04)
+- **Last Known Working State:** All tests passing (136 unit, 16 e2e)
+- **Last Session:** Session 14
 
 ## Session Log
+
+### Session 14 -- DAY-04
+- Implemented DAY-04: Voting system with simultaneous public voting on nominations
+- Added `activeNominationIndex` to `GameState` type and `votesSubmitted` to `Nomination` type
+- Added `startVote()`, `recordVote()`, `resolveVote()` to `gameStateMachine.ts`
+- Modified `nominate` socket handler to auto-start a vote after each nomination (daySubPhase → 'vote')
+- Added `submit_vote` socket handler: validates phase, prevents double voting, tracks ghost votes for dead players
+- Added `reveal_votes` socket handler: Storyteller-only, resolves vote and broadcasts results to all clients
+- Auto-reveal: when all eligible players have submitted, vote resolves automatically without Storyteller action
+- Ghost vote tracking: dead players get exactly one ghost vote; `ghostVoteUsed` flag persists across nominations
+- Vote threshold: passes if yes votes >= ceil(livingPlayers / 2)
+- After vote resolves, daySubPhase returns to 'nomination' for further nominations
+- Updated 2 existing nomination tests to resolve votes before testing second nomination (vote auto-starts now)
+- Refactored socket handlers to use destructuring for `activeNominationIndex` to satisfy state machine purity test
+- 20 new unit tests in `voting.test.ts`: 9 state machine tests + 11 WebSocket integration tests
+- All 136 unit + 16 e2e tests passing
 
 ### Session 13 -- DAY-03
 - Implemented DAY-03: Nomination system with living player nominations

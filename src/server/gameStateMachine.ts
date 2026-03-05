@@ -11,6 +11,7 @@ export function createInitialGameState(id: string, joinCode: string, storyteller
     players: [],
     storytellerId,
     nominations: [],
+    activeNominationIndex: null,
     nightQueue: [],
     nightQueuePosition: 0,
     executedPlayerId: null,
@@ -189,6 +190,7 @@ export function addNomination(state: GameState, nominatorId: string, nomineeId: 
     nominatorId,
     nomineeId,
     votes: [],
+    votesSubmitted: [],
     voteCount: 0,
     passed: false,
   };
@@ -206,6 +208,86 @@ export function clearNominations(state: GameState): GameState {
   return {
     ...state,
     nominations: [],
+    activeNominationIndex: null,
+  };
+}
+
+export function startVote(state: GameState, nominationIndex: number): GameState {
+  return {
+    ...state,
+    activeNominationIndex: nominationIndex,
+    daySubPhase: 'vote' as DaySubPhase,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'vote_started', data: { nominationIndex } },
+    ],
+  };
+}
+
+export function recordVote(state: GameState, nominationIndex: number, playerId: string, vote: boolean): GameState {
+  const nomination = state.nominations[nominationIndex];
+  if (!nomination) return state;
+
+  // Don't allow double submission
+  if (nomination.votesSubmitted.includes(playerId)) return state;
+
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return state;
+
+  // Handle ghost vote for dead players
+  let updatedPlayers = state.players;
+  if (!player.isAlive && vote) {
+    if (player.ghostVoteUsed) return state;
+    updatedPlayers = state.players.map((p) =>
+      p.id === playerId ? { ...p, ghostVoteUsed: true, hasGhostVote: false } : p
+    );
+  }
+
+  const updatedNomination: Nomination = {
+    ...nomination,
+    votes: vote ? [...nomination.votes, playerId] : nomination.votes,
+    votesSubmitted: [...nomination.votesSubmitted, playerId],
+  };
+
+  const updatedNominations = state.nominations.map((n, i) =>
+    i === nominationIndex ? updatedNomination : n
+  );
+
+  return {
+    ...state,
+    nominations: updatedNominations,
+    players: updatedPlayers,
+  };
+}
+
+export function resolveVote(state: GameState, nominationIndex: number): GameState {
+  const nomination = state.nominations[nominationIndex];
+  if (!nomination) return state;
+
+  const livingCount = state.players.filter((p) => p.isAlive).length;
+  const threshold = Math.ceil(livingCount / 2);
+  const voteCount = nomination.votes.length;
+  const passed = voteCount >= threshold;
+
+  const resolvedNomination: Nomination = {
+    ...nomination,
+    voteCount,
+    passed,
+  };
+
+  const updatedNominations = state.nominations.map((n, i) =>
+    i === nominationIndex ? resolvedNomination : n
+  );
+
+  return {
+    ...state,
+    nominations: updatedNominations,
+    activeNominationIndex: null,
+    daySubPhase: 'nomination' as DaySubPhase,
+    gameLog: [
+      ...state.gameLog,
+      { timestamp: Date.now(), type: 'vote_resolved', data: { nominationIndex, voteCount, passed, threshold } },
+    ],
   };
 }
 

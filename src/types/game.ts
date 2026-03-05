@@ -47,6 +47,7 @@ export interface Nomination {
   nominatorId: string;
   nomineeId: string;
   votes: string[];
+  votesSubmitted: string[];
   voteCount: number;
   passed: boolean;
 }
@@ -67,6 +68,7 @@ export interface GameState {
   players: Player[];
   storytellerId: string | null;
   nominations: Nomination[];
+  activeNominationIndex: number | null;
   nightQueue: NightQueueEntry[];
   nightQueuePosition: number;
   executedPlayerId: string | null;

@@ -172,10 +172,16 @@ describe('nomination', () => {
     const nomineeId1 = players[1].id!;
     const nomineeId2 = players[2].id!;
 
-    // First nomination succeeds
+    // First nomination succeeds (also starts a vote)
     const nomPromise = waitForEvent(host, 'nomination_made');
     players[0].emit('nominate', { gameId, nomineeId: nomineeId1 });
     await nomPromise;
+    await new Promise<void>((r) => setTimeout(r, 50));
+
+    // Resolve the vote so we return to nomination phase
+    const voteResultPromise = waitForEvent(host, 'vote_result');
+    host.emit('reveal_votes', { gameId });
+    await voteResultPromise;
     await new Promise<void>((r) => setTimeout(r, 50));
 
     // Second nomination from same player fails
@@ -191,10 +197,16 @@ describe('nomination', () => {
 
     const nomineeId = players[2].id!;
 
-    // First nomination of nominee succeeds
+    // First nomination of nominee succeeds (also starts a vote)
     const nomPromise = waitForEvent(host, 'nomination_made');
     players[0].emit('nominate', { gameId, nomineeId });
     await nomPromise;
+    await new Promise<void>((r) => setTimeout(r, 50));
+
+    // Resolve the vote so we return to nomination phase
+    const voteResultPromise = waitForEvent(host, 'vote_result');
+    host.emit('reveal_votes', { gameId });
+    await voteResultPromise;
     await new Promise<void>((r) => setTimeout(r, 50));
 
     // Second nomination of same nominee from different player fails
