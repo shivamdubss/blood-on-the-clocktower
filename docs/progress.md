@@ -3,7 +3,7 @@
 ## Current State
 - **Current Milestone:** Milestone 5 (Evil Team Abilities + Poisoner/Drunk System)
 - **Features Completed:** 23 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER)
-- **Last Known Working State:** All tests passing (273 unit, 16 e2e)
+- **Last Known Working State:** All tests passing (277 unit, 16 e2e)
 - **Last Session:** Session 22
 
 ## Session Log
@@ -16,8 +16,8 @@
 - Poisoner is first in both NIGHT_1_ORDER and NIGHT_OTHER_ORDER (acts before other roles)
 - Poison persists through day until Poisoner acts again next night
 - isPoisoned visible in Grimoire (sent to Storyteller via grimoire event)
-- 18 new tests in `tests/unit/poisoner.test.ts`: night queue presence, target selection, poison timing, duration, poisoned poisoner ineffective, grimoire visibility, logging, invalid target handling
-- All 273 unit + 16 e2e tests passing
+- 22 new tests in `tests/unit/poisoner.test.ts`: 14 state machine tests (processPoisonerAction, night queue presence, poison timing/duration, ability handler validation) + 5 WebSocket tests (Storyteller submits action, clears previous poison, Grimoire visibility, sanitized game_state leak prevention) + 3 timing tests
+- All 277 unit + 16 e2e tests passing
 
 ### Session 21 -- ST-01
 - Implemented ST-01: Storyteller override system for overriding game events before commit
