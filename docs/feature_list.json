@@ -14,7 +14,7 @@
       "test:e2e -- --grep 'create game'"
     ],
     "human_review": [],
-    "passes": false
+    "passes": true
   },
   {
     "id": "LOBBY-02",

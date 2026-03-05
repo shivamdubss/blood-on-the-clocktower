@@ -63,7 +63,7 @@ echo "Dev server ready (took ${WAITED}s)"
 
 # 6. Run unit tests (--run flag prevents vitest from hanging in watch mode)
 echo "Running unit tests..."
-npm run test:unit -- --run
+npm run test:unit
 echo "Unit tests: PASSED"
 
 echo ""
