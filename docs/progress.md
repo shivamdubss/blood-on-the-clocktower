@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 32 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF)
-- **Last Known Working State:** All tests passing (430 unit, 16 e2e)
-- **Last Session:** Session 30
+- **Features Completed:** 33 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH)
+- **Last Known Working State:** All tests passing (448 unit, 16 e2e)
+- **Last Session:** Session 31
 
 ## Session Log
+
+### Session 31 -- ABILITY-EMPATH
+- Implemented ABILITY-EMPATH: Empath learns how many of their 2 alive neighbours are Evil each night
+- Updated `src/roles/empath.ts` ability handler: validates `number` input from Storyteller, checks isPoisoned/isDrunk for isCorrupted flag
+- Infrastructure already in place: empath in both NIGHT_1_ORDER and NIGHT_OTHER_ORDER, prompt type `provide_number`, prompt description mentioning evil alive neighbours, included in INFO_ROLES
+- Fires every night (unlike Chef which is Night 1 only)
+- Neighbours are computed dynamically each night based on current alive state (dead neighbours skipped to next living player)
+- Recluse may register as Evil at Storyteller's discretion (Storyteller manually provides the count)
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false number
+- 18 new tests in `empath.test.ts`: 2 night order tests (Night 1 + Night 2+), 1 night prompt test, 10 ability handler tests (success, zero, two neighbours, validation, dead neighbour skip, Recluse, poisoned, drunk), 5 WebSocket tests (info delivery, zero delivery, poisoned info, isPoisoned flag, isDrunk flag)
+- All 448 unit + 16 e2e tests passing
+- Next feature: ABILITY-FORTUNE-TELLER
 
 ### Session 30 -- ABILITY-CHEF
 - Implemented ABILITY-CHEF: Chef learns the number of evil pairs sitting adjacent on Night 1
