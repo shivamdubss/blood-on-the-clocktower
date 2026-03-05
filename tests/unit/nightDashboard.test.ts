@@ -394,12 +394,12 @@ describe('night dashboard', () => {
       store.games.set(gameId, state);
 
       const storyteller = createClient();
-      const player = createClient();
       await new Promise<void>((resolve) => storyteller.on('connect', resolve));
-      await new Promise<void>((resolve) => player.on('connect', resolve));
-
       storyteller.emit('join_game', { joinCode: 'ABC123', playerName: 'ST' });
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
+      const player = createClient();
+      await new Promise<void>((resolve) => player.on('connect', resolve));
       player.emit('join_game', { joinCode: 'ABC123', playerName: 'P1' });
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
 
