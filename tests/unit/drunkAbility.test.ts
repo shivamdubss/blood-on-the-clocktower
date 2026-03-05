@@ -275,7 +275,6 @@ describe('Drunk ability', () => {
           nightQueuePosition: preIdx,
         };
         store.games.set('g1', state);
-        store.playerSockets.set(stClient.id!, 'g1');
 
         // Submit action to advance to Drunk's position
         const prompt = await new Promise<Record<string, unknown>>((resolve) => {

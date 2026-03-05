@@ -19,7 +19,7 @@ export interface AbilityResult {
 export type AbilityHandler = (
   context: AbilityContext,
   input?: unknown
-) => AbilityResult | Promise<AbilityResult>;
+) => AbilityResult;
 
 export interface RoleAbility {
   roleId: RoleId;
