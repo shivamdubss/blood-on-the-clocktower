@@ -2,11 +2,19 @@
 
 ## Current State
 - **Current Milestone:** Milestone 2 (Role Assignment + Setup) -- IN PROGRESS
-- **Features Completed:** 8 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01)
-- **Last Known Working State:** All tests passing (61 unit, 16 e2e)
-- **Last Session:** Session 7
+- **Features Completed:** 9 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02)
+- **Last Known Working State:** All tests passing (67 unit, 16 e2e)
+- **Last Session:** Session 8
 
 ## Session Log
+
+### Session 8 -- SETUP-02
+- Implemented SETUP-02: Drunk is assigned an apparent Townsfolk role not otherwise in the game
+- Extended `RoleAssignment` interface to include `apparentRole` field
+- `assignRoles()` now picks a random Townsfolk not in the assigned pool as the Drunk's apparent role
+- `assignAllRoles()` uses the `apparentRole` from role distribution (no longer hardcodes `apparentRole: role`)
+- 6 new unit tests in `drunkAssignment.test.ts`: apparent role is Townsfolk, not in game, stored in state, Grimoire shows both roles, non-Drunk players unaffected
+- All 67 unit + 16 e2e tests passing
 
 ### Session 7 -- SETUP-01
 - Implemented SETUP-01: Baron adjustment adds 2 Outsiders (replaces 2 Townsfolk)
