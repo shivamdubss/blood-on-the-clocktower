@@ -2,11 +2,23 @@
 
 ## Current State
 - **Current Milestone:** Milestone 6 (Townsfolk Abilities)
-- **Features Completed:** 33 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH)
-- **Last Known Working State:** All tests passing (448 unit, 16 e2e)
-- **Last Session:** Session 31
+- **Features Completed:** 34 / 52 (LOBBY-01, LOBBY-02, LOBBY-03, STATE-01, STATE-02, ROLE-01, ROLE-02, SETUP-01, SETUP-02, SETUP-03, SETUP-04, DAY-01, DAY-02, DAY-03, DAY-04, DAY-05, DAY-06, ARCH-01, NIGHT-01, NIGHT-02, NIGHT-03, ST-01, ABILITY-POISONER, ABILITY-IMP, ABILITY-SPY, ABILITY-SCARLET-WOMAN, EDGE-01, EDGE-02, ABILITY-WASHERWOMAN, ABILITY-LIBRARIAN, ABILITY-INVESTIGATOR, ABILITY-CHEF, ABILITY-EMPATH, ABILITY-FORTUNE-TELLER)
+- **Last Known Working State:** All tests passing (468 unit, 16 e2e)
+- **Last Session:** Session 32
 
 ## Session Log
+
+### Session 32 -- ABILITY-FORTUNE-TELLER
+- Implemented ABILITY-FORTUNE-TELLER: Fortune Teller chooses 2 players each night, learns if either is the Demon (or red herring)
+- Updated `src/roles/fortuneTeller.ts` ability handler: validates player1Id, player2Id, and boolean answer; checks isPoisoned/isDrunk for isCorrupted flag
+- Infrastructure already in place: fortuneTeller in both NIGHT_1_ORDER and NIGHT_OTHER_ORDER, prompt type `choose_two_players`, prompt description mentioning Demon and red herring, included in INFO_ROLES
+- Fires every night (both Night 1 and Night 2+)
+- Red herring always registers as "yes" even if dead (Storyteller manually provides the answer)
+- Recluse may register as Demon at Storyteller's discretion (Storyteller manually provides the answer)
+- When poisoned/drunk, isCorrupted flag is set; Storyteller manually provides false answer
+- 20 new tests in `fortuneTeller.test.ts`: 2 night order tests (Night 1 + Night 2+), 1 night prompt test, 12 ability handler tests (yes/no answers, red herring, dead red herring, Recluse, validation, poisoned, drunk), 5 WebSocket tests (info delivery with yes, info delivery with no, poisoned info, isPoisoned flag, isDrunk flag)
+- All 468 unit + 16 e2e tests passing
+- Next feature: ABILITY-UNDERTAKER
 
 ### Session 31 -- ABILITY-EMPATH
 - Implemented ABILITY-EMPATH: Empath learns how many of their 2 alive neighbours are Evil each night
